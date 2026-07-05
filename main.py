@@ -1,138 +1,28 @@
 import sys
-import sqlite3
-from tkinter import dialog
+from database.database import (
+    create_tables,
+)
+import database.task_db as task_db
+from pages.schedule import SchedulePage
+
 from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
-    QDateEdit,
-    QListWidgetItem,
-    QTimeEdit,
-    QFormLayout,
-    QLineEdit,
-    QSpinBox,
-    QComboBox,
-    QDialogButtonBox,
     QMainWindow,
     QWidget,
     QHBoxLayout,
     QVBoxLayout,
     QLabel,
     QPushButton,
-    QListWidget,
-    QMenu 
 )
 from PyQt6.QtCore import (
     Qt,
     QSize,
-    QDate,
-    QTime
 )
 from PyQt6.QtGui import QMovie
-
-# Add Project Dialog Section
-
-class AddProjectDialog(QDialog):
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("Add Project")
-        self.resize(450, 300)
-
-        layout = QFormLayout()
-
-        self.name_input = QLineEdit()
-
-        self.deadline_input = QDateEdit()
-        self.deadline_input.setDate(QDate.currentDate())
-        self.deadline_input.setCalendarPopup(True)
-        self.deadline_input.setDisplayFormat("dd-MM-yyyy")
-
-        self.hours_input = QSpinBox()
-        self.hours_input.setMaximum(10000)
-
-        self.priority_input = QComboBox()
-        self.priority_input.addItems([
-            "Low",
-            "Medium",
-            "High"
-        ])
-
-        layout.addRow("Project Name", self.name_input)
-        layout.addRow("Deadline", self.deadline_input)
-        layout.addRow("Hours Required", self.hours_input)
-        layout.addRow("Priority", self.priority_input)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok |
-            QDialogButtonBox.StandardButton.Cancel
-        )
-
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-
-        layout.addWidget(buttons)
-
-        self.setLayout(layout)
-
-# Add Task Dialog Section
-class AddTaskDialog(QDialog):
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("Add Task")
-        self.resize(450, 300)
-
-        layout = QFormLayout()
-
-        self.title_input = QLineEdit()
-
-        self.date_input = QDateEdit()
-        self.date_input.setDate(QDate.currentDate())
-        self.date_input.setCalendarPopup(True)
-        self.date_input.setDisplayFormat("dd-MM-yyyy")
-
-        self.start_input = QTimeEdit()
-        self.start_input.setTime(QTime.currentTime())
-
-        self.end_input = QTimeEdit()
-        self.end_input.setTime(QTime.currentTime())
-
-        layout.addRow("Task Name", self.title_input)
-        layout.addRow("Date", self.date_input)
-        layout.addRow("Start Time", self.start_input)
-        layout.addRow("End Time", self.end_input)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok |
-            QDialogButtonBox.StandardButton.Cancel
-        )
-
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-
-        layout.addWidget(buttons)
-
-        self.setLayout(layout)
-
-# Edit Task Dialog Section
-class EditTaskDialog(AddTaskDialog):
-
-    def __init__(
-        self,
-        title,
-        date,
-        start,
-        end
-    ):
-        super().__init__()
-
-        self.setWindowTitle(
-            "Edit Task"
-        )
-
-        self.title_input.setText(
-            title
-        )
+from dialogs.add_task_dialog import AddTaskDialog
+from dialogs.edit_task_dialog import EditTaskDialog
+from dialogs.add_project_dialog import AddProjectDialog
 
 
 # SIRA Schedule Main Window SEction
@@ -228,51 +118,12 @@ class SIRASchedule(QMainWindow):
 
         # ---------- Schedule Header ----------
 
-        toolbar = QHBoxLayout()
+        self.schedule_page = SchedulePage(self)
 
-        self.schedule_title = QLabel("Today's Schedule")
-        self.schedule_title.setStyleSheet("""
-        font-size: 26px;
-        color: #1EA7FF;
-        font-weight: bold;
-        """)
-        self.view_selector = QComboBox()
-        self.view_selector.addItems([
-            "Today",
-            "Tomorrow",
-            "This Week",
-            "All Tasks"
-        ])
-        toolbar = QHBoxLayout()
-        toolbar.addWidget(self.schedule_title)
-        toolbar.addStretch()
-        toolbar.addWidget(self.view_selector)
+        content.addWidget(self.schedule_page)
 
-        content.addLayout(toolbar)
-        self.task_list = QListWidget()
-        content.addWidget(self.task_list)
-
-        #Load tasks after creating the dropdwn
-        self.load_tasks()
         
-        #Refresh tasks when the dropdown selection changes
-        self.view_selector.currentIndexChanged.connect(
-            self.load_tasks
-        )
-
-        # ---------- Schedule List ----------
-
-        self.task_list.itemClicked.connect(
-            self.toggle_task_completed
-        )
         
-        self.task_list.setContextMenuPolicy(
-            Qt.ContextMenuPolicy.CustomContextMenu
-        )
-
-        self.task_list.customContextMenuRequested.connect(
-            self.task_context_menu
-        )
 
         # ====================================================
         # Bottom Information Panels
@@ -399,7 +250,7 @@ class SIRASchedule(QMainWindow):
     def open_add_project(self):
         dialog = AddProjectDialog()
 
-        if dialog.exec():
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             print(
                 dialog.name_input.text(),
                 dialog.deadline_input.text(),
@@ -410,288 +261,33 @@ class SIRASchedule(QMainWindow):
     def open_add_task(self):
         dialog = AddTaskDialog()
 
-        if dialog.exec():
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            title = dialog.title_input.text()
 
-         title = dialog.title_input.text()
-
-        date = dialog.date_input.date().toString(
-            "yyyy-MM-dd"
-        )
-
-        start_time = dialog.start_input.time().toString(
-            "HH:mm"
-        )
-
-        end_time = dialog.end_input.time().toString(
-            "HH:mm"
-        )
-
-        conn = sqlite3.connect("sira_schedule.db")
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        INSERT INTO tasks
-        (title, date, start_time, end_time)
-        VALUES (?, ?, ?, ?)
-        """, (
-            title,
-            date,
-            start_time,
-            end_time
-        ))
-
-        conn.commit()
-        conn.close()
-
-        print("Task saved successfully.")
-        self.load_tasks()
-
-    def load_tasks(self):
-
-        self.task_list.clear()
-
-        conn = sqlite3.connect("sira_schedule.db")
-        cursor = conn.cursor()
-
-        selected = self.view_selector.currentText()
-
-        # ================= TODAY =================
-
-        if selected == "Today":
-
-            today = QDate.currentDate().toString("yyyy-MM-dd")
-            
-            self.schedule_title.setText("Today's Schedule")
-            cursor.execute("""
-                SELECT id, title, date, start_time, end_time, completed
-                FROM tasks
-                WHERE date = ?
-                ORDER BY start_time
-            """, (today,))
-
-        # ================= TOMORROW =================
-
-        elif selected == "Tomorrow":
-
-            tomorrow = QDate.currentDate().addDays(1).toString("yyyy-MM-dd")
-
-            self.schedule_title.setText("Tomorrow's Schedule")
-            cursor.execute("""
-                SELECT id, title, date, start_time, end_time, completed
-                FROM tasks
-                WHERE date = ?
-                ORDER BY start_time
-            """, (tomorrow,))
-
-        # ================= THIS WEEK =================
-
-        elif selected == "This Week":
-
-            today = QDate.currentDate().toString("yyyy-MM-dd")
-            end_week = QDate.currentDate().addDays(6).toString("yyyy-MM-dd")
-
-            self.schedule_title.setText("This Week's Schedule")
-            cursor.execute("""
-                SELECT id, title, date, start_time, end_time, completed
-                FROM tasks
-                WHERE date BETWEEN ? AND ?
-                ORDER BY date, start_time
-            """, (today, end_week))
-
-        # ================= ALL TASKS =================
-
-        else:
-            self.schedule_title.setText("All Tasks")
-            cursor.execute("""
-                SELECT id, title, date, start_time, end_time, completed
-                FROM tasks
-                ORDER BY date, start_time
-            """)
-
-        tasks = cursor.fetchall()
-
-        conn.close()
-
-        # ================= LOAD TASKS =================
-
-        for task in tasks:
-
-            task_id, title, date, start, end, completed = task
-
-            prefix = "☑" if completed else "☐"
-
-            date_text = QDate.fromString(
-                date,
+            date = dialog.date_input.date().toString(
                 "yyyy-MM-dd"
-            ).toString("ddd dd MMM")
-
-            if selected in ("Today", "Tomorrow"):
-
-                text = (
-                    f"{prefix} {start} - {end}   {title}"
-                )
-
-            else:
-
-                text = (
-                    f"{prefix} {date_text} | {start} - {end} | {title}"
-                )
-
-
-            item = QListWidgetItem(text)
-
-            item.setData(
-                Qt.ItemDataRole.UserRole,
-                task_id
             )
 
-            self.task_list.addItem(item)
-    
-    def toggle_task_completed(self, item):
+            start_time = dialog.start_input.time().toString(
+                "HH:mm"
+            )
 
-        task_id = item.data(
-            Qt.ItemDataRole.UserRole
-        )
+            end_time = dialog.end_input.time().toString(
+                "HH:mm"
+            )
 
-        conn = sqlite3.connect(
-            "sira_schedule.db"
-        )
-
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT completed
-            FROM tasks
-            WHERE id = ?
-        """, (task_id,))
-
-        current = cursor.fetchone()[0]
-
-        new_value = 0 if current else 1
-
-        cursor.execute("""
-            UPDATE tasks
-            SET completed = ?
-            WHERE id = ?
-        """, (
-            new_value,
-            task_id
-        ))
-
-        conn.commit()
-        conn.close()
-
-        self.load_tasks()
-
-    def edit_task(self, item):
-
-        task_id = item.data(
-            Qt.ItemDataRole.UserRole
-        )
-
-        conn = sqlite3.connect(
-            "sira_schedule.db"
-        )
-
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT title, date, start_time, end_time
-            FROM tasks
-            WHERE id = ?
-        """, (task_id,))
-
-        task_data = cursor.fetchone()
-        conn.close()
-
-        if task_data:
-            title, date, start_time, end_time = task_data
-
-            dialog = EditTaskDialog(
+            task_db.add_task(
                 title,
-                QDate.fromString(date, "yyyy-MM-dd"),
-                QTime.fromString(start_time, "HH:mm"),
-                QTime.fromString(end_time, "HH:mm")
+                date,
+                start_time,
+                end_time
             )
 
-            if dialog.exec():
-                new_title = dialog.title_input.text()
-                new_date = dialog.date_input.date().toString("yyyy-MM-dd")
-                new_start_time = dialog.start_input.time().toString("HH:mm")
-                new_end_time = dialog.end_input.time().toString("HH:mm")
-
-                conn = sqlite3.connect(
-                    "sira_schedule.db"
-                )
-                cursor = conn.cursor()
-
-                cursor.execute("""
-                    UPDATE tasks
-                    SET title = ?, date = ?, start_time = ?, end_time = ?
-                    WHERE id = ?
-                """, (
-                    new_title,
-                    new_date,
-                    new_start_time,
-                    new_end_time,
-                    task_id
-                ))
-
-                conn.commit()
-                conn.close()
-
-                self.load_tasks()
- 
-    def task_context_menu(self, position):
-
-        item = self.task_list.itemAt(position)
-
-        if not item:
-            return
-
-        menu = QMenu()
-
-        delete_action = menu.addAction(
-            "Delete Task"
-        )
-        edit_action = menu.addAction(
-            "Edit Task"
-        )
-
-        action = menu.exec(
-            self.task_list.mapToGlobal(position)
-        )
-
-        if action == delete_action:
-
-            task_id = item.data(
-                Qt.ItemDataRole.UserRole
-            )
-
-            conn = sqlite3.connect(
-                "sira_schedule.db"
-            )
-
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                DELETE FROM tasks
-                WHERE id = ?
-            """, (task_id,))
-
-            conn.commit()
-            conn.close()
-
-            self.load_tasks()
-        
-        elif action == edit_action:
-            self.edit_task(item)
+            print("Task saved successfully.")
+            self.schedule_page.load_tasks()
 
 
-
-
-
-
+create_tables()
 
 app = QApplication(sys.argv)
 
