@@ -153,3 +153,25 @@ def update_project(
 
     conn.commit()
     conn.close()
+
+
+def get_next_deadline():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            name,
+            deadline
+        FROM projects
+        WHERE status = 'Active'
+        ORDER BY deadline
+        LIMIT 1
+    """)
+
+    project = cursor.fetchone()
+
+    conn.close()
+
+    return project

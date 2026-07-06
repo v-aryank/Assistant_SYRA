@@ -1,4 +1,5 @@
 import database.task_db as task_db
+import database.project_db as project_db
 from dialogs.edit_task_dialog import EditTaskDialog
 from PyQt6.QtWidgets import (
     QPushButton,
@@ -26,6 +27,7 @@ class SchedulePage(QWidget):
         self.main_window = parent
 
         layout = QVBoxLayout()
+        content_layout = QVBoxLayout()
 
         # ---------- Toolbar ----------
 
@@ -50,12 +52,92 @@ class SchedulePage(QWidget):
         toolbar.addWidget(self.view_selector)
 
         layout.addLayout(toolbar)
+        
 
-        # ---------- Task List ----------
+        # ---------- Main Content ----------
+
+        content_layout = QHBoxLayout()
+
+        # ================= LEFT =================
 
         self.task_list = QListWidget()
 
-        layout.addWidget(self.task_list)
+        content_layout.addWidget(
+            self.task_list,
+            7
+        )
+
+        # ================= RIGHT =================
+
+        right_panel = QVBoxLayout()
+
+        right_title = QLabel("Statistics")
+        right_title.setStyleSheet("""
+            font-size: 20px;
+            font-weight: bold;
+            color: #1EA7FF;
+            padding-bottom: 8px; 
+             """)
+        right_panel.addWidget(right_title)
+        self.total_label = QLabel("Total Tasks : 0")
+        self.completed_label = QLabel("Completed : 0")
+        self.remaining_label = QLabel("Remaining : 0")
+        self.percent_label = QLabel("Completion : 0%")
+
+        # ---------- Next Task ----------
+        self.next_task_label = QLabel(
+            "🗒 Next Task\n\nNo upcoming task"
+        )
+
+        # ---------- Upcoming Deadline ----------
+        self.deadline_label = QLabel(
+            "🗓 Upcoming Deadline\n\nNo active project"
+        )
+
+        # ---------- AI Insight ----------
+        self.ai_label = QLabel(
+            ".✦ ݁˖ AI Insight\n\nSystem analysing..."
+        )
+        
+
+        for label in (
+            self.total_label,
+            self.completed_label,
+            self.remaining_label,
+            self.percent_label,
+            self.next_task_label,
+            self.deadline_label,
+            self.ai_label
+        ):
+            label.setStyleSheet("""
+                border:1px solid #008CFF;
+                border-radius:8px;
+                padding:8px;
+                background:#07131F;
+                font-size:15px;
+            """)
+
+        right_panel.addWidget(self.total_label)
+        right_panel.addWidget(self.completed_label)
+        right_panel.addWidget(self.remaining_label)
+        right_panel.addWidget(self.percent_label)
+            
+        right_panel.addSpacing(15)
+
+        right_panel.addWidget(self.next_task_label)
+
+        right_panel.addWidget(self.deadline_label)
+
+        right_panel.addWidget(self.ai_label)
+
+        right_panel.addStretch()
+
+        content_layout.addLayout(
+            right_panel,
+            3
+        )
+
+        layout.addLayout(content_layout)
 
         self.setLayout(layout)
 
@@ -147,6 +229,174 @@ class SchedulePage(QWidget):
             )
 
             self.task_list.addItem(item)
+        self.refresh_statistics()
+    
+    def refresh_statistics(self):
+
+        total = self.task_list.count()
+
+        completed = 0
+
+        for i in range(total):
+
+            item = self.task_list.item(i)
+
+            if item.text().startswith("☑"):
+                completed += 1
+
+        remaining = total - completed
+
+        percent = 0
+
+        if total > 0:
+            percent = int((completed / total) * 100)
+
+        self.total_label.setText(
+            f"Total Tasks : {total}"
+        )
+
+        self.completed_label.setText(
+            f"Completed : {completed}"
+        )
+
+        self.remaining_label.setText(
+            f"Remaining : {remaining}"
+        )
+
+        self.percent_label.setText(
+            f"Completion : {percent}%"
+        )
+        
+        # ----------- Next Task ----------
+        today = QDate.currentDate().toString("yyyy-MM-dd")
+
+        task = task_db.get_next_task(today)
+
+        if task:
+
+            title, start, end = task
+
+            self.next_task_label.setText(
+                f"""
+        🗒 Next Task
+
+        {title}
+
+        {start} - {end}
+        """
+            )
+
+        else:
+
+            self.next_task_label.setText(
+                """
+        🗒 Next Task
+
+        No upcoming task
+        """
+            )
+        
+        # ----------- Upcoming Deadline ----------
+        project = project_db.get_next_deadline()
+
+        if project:
+
+            name, deadline = project
+
+            deadline_date = QDate.fromString(
+                deadline,
+                "yyyy-MM-dd"
+            )
+
+            days = QDate.currentDate().daysTo(deadline_date)
+
+            if days == 0:
+                deadline_text = "Today"
+
+            elif days == 1:
+                deadline_text = "Tomorrow"
+
+            else:
+                deadline_text = f"{days} days remaining"
+
+            self.deadline_label.setText(
+                f"""
+        🗓 Upcoming Deadline
+
+        {name}
+
+        {deadline_date.toString("dd MMM yyyy")}
+
+        {deadline_text}
+        """
+            )
+
+        else:
+
+            self.deadline_label.setText(
+                """
+        🗓 Upcoming Deadline
+
+        No active project
+        """
+            )
+        
+        # ---------- AI Insight ----------
+        self.update_ai_insight(
+            total,
+            completed,
+            remaining
+        )
+
+    def update_ai_insight(
+        self,
+        total,
+        completed,
+        remaining
+    ):
+
+        if total == 0:
+
+            text = (
+                "No tasks scheduled today.\n"
+                "A good day to plan ahead."
+            )
+
+        elif completed == total:
+
+            text = (
+                "Excellent work.\n"
+                "Today's schedule is complete."
+            )
+
+        elif completed == 0:
+
+            text = (
+                "Start with your first task.\n"
+                "Momentum matters."
+            )
+
+        elif remaining >= 5:
+
+            text = (
+                "Busy day ahead.\n"
+                "Focus on one task at a time."
+            )
+
+        else:
+
+            text = (
+                "You're making progress.\n"
+                "Keep going."
+            )
+
+        self.ai_label.setText(
+            f"""
+        .✦ ݁˖ AI Insight
+
+        {text}
+        """
+            )
 
 
     def toggle_task_completed(self, item):

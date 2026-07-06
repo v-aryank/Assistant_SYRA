@@ -176,3 +176,24 @@ def toggle_task_completion(task_id):
     conn.commit()
     conn.close()
 
+def get_next_task(today):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT title,
+               start_time,
+               end_time
+        FROM tasks
+        WHERE date = ?
+          AND completed = 0
+        ORDER BY start_time
+        LIMIT 1
+    """, (today,))
+
+    task = cursor.fetchone()
+
+    conn.close()
+
+    return task
