@@ -16,12 +16,23 @@ def create_tables():
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS projects (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        deadline TEXT,
-        hours_required INTEGER,
-        priority TEXT,
-        progress INTEGER DEFAULT 0
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    name TEXT NOT NULL,
+
+    deadline TEXT,
+
+    estimated_hours_required INTEGER,
+
+    worked_hours INTEGER DEFAULT 0,
+
+    priority TEXT,
+
+    progress INTEGER DEFAULT 0,
+
+    status TEXT DEFAULT 'Active'
+
     )
     """)
 

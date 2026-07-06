@@ -1,6 +1,7 @@
 import database.task_db as task_db
 from dialogs.edit_task_dialog import EditTaskDialog
 from PyQt6.QtWidgets import (
+    QPushButton,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -32,7 +33,9 @@ class SchedulePage(QWidget):
 
         self.schedule_title = QLabel("Today's Schedule")
         self.schedule_title.setStyleSheet("font-size: 26px; font-weight: bold;")
-
+        
+        
+        self.new_task_btn = QPushButton("+ New Task")
         self.view_selector = QComboBox()
         self.view_selector.addItems([
             "Today",
@@ -43,6 +46,7 @@ class SchedulePage(QWidget):
 
         toolbar.addWidget(self.schedule_title)
         toolbar.addStretch()
+        toolbar.addWidget(self.new_task_btn)
         toolbar.addWidget(self.view_selector)
 
         layout.addLayout(toolbar)
@@ -72,6 +76,9 @@ class SchedulePage(QWidget):
 
         self.task_list.customContextMenuRequested.connect(
             self.task_context_menu
+        )
+        self.new_task_btn.clicked.connect(
+            self.main_window.open_add_task
         )
     #Load tasks after creating the dropdwn
         self.load_tasks()

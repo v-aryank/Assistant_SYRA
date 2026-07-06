@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QLabel,
     QPushButton,
+    QStackedWidget,
 )
 from PyQt6.QtCore import (
     Qt,
@@ -21,8 +22,10 @@ from PyQt6.QtCore import (
 )
 from PyQt6.QtGui import QMovie
 from dialogs.add_task_dialog import AddTaskDialog
-from dialogs.edit_task_dialog import EditTaskDialog
 from dialogs.add_project_dialog import AddProjectDialog
+import database.project_db as project_db
+from pages.projects import ProjectsPage
+from pages.dashboard import DashboardPage
 
 
 # SIRA Schedule Main Window SEction
@@ -30,7 +33,7 @@ class SIRASchedule(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("SIRA Schedule Assistant")
+        self.setWindowTitle("SIRA - Assistant")
         self.setGeometry(100, 100, 1400, 800)
 
         # Main widget
@@ -87,8 +90,6 @@ class SIRASchedule(QMainWindow):
         btn_schedule = QPushButton("Schedule")
         btn_projects = QPushButton("Projects")
         btn_routine = QPushButton("Routine")
-        btn_add_project = QPushButton("+ Add Project")
-        btn_add_task = QPushButton("+ Add Task")
         btn_settings = QPushButton("Settings")
 
         sidebar.addSpacing(20)
@@ -96,15 +97,20 @@ class SIRASchedule(QMainWindow):
         sidebar.addWidget(btn_schedule)
         sidebar.addWidget(btn_routine)
         sidebar.addWidget(btn_projects)
-        sidebar.addWidget(btn_add_project)
-        btn_add_project.clicked.connect(
-        self.open_add_project
+       
+        btn_schedule.clicked.connect(
+            lambda: self.pages.setCurrentWidget(self.schedule_page)
         )
-        sidebar.addWidget(btn_add_task)
-        btn_add_task.clicked.connect(
-        self.open_add_task
+
+        btn_projects.clicked.connect(
+            lambda: self.pages.setCurrentWidget(self.projects_page)
         )
         
+        btn_dashboard.clicked.connect(
+            lambda: self.pages.setCurrentWidget(
+                self.dashboard_page
+            )
+        )
         sidebar.addStretch()
         sidebar.addWidget(btn_settings)
 
@@ -116,14 +122,24 @@ class SIRASchedule(QMainWindow):
         # ================= Main Area =================
         content = QVBoxLayout()
 
-        # ---------- Schedule Header ----------
+        
+
+        self.pages = QStackedWidget()
 
         self.schedule_page = SchedulePage(self)
+        self.projects_page = ProjectsPage(self)
+        self.dashboard_page = DashboardPage(self)
+        self.pages.addWidget(self.schedule_page)
+        self.pages.addWidget(self.projects_page)
+        self.pages.addWidget(self.dashboard_page)
 
-        content.addWidget(self.schedule_page)
+        content.addWidget(self.pages)
+        self.pages.setCurrentWidget(
+            self.dashboard_page
+        )
 
-        
-        
+                
+                
 
         # ====================================================
         # Bottom Information Panels
@@ -156,7 +172,7 @@ class SIRASchedule(QMainWindow):
 
         # ---------------- PROJECTS ----------------
 
-        project_status = QLabel(
+        self.project_status = QLabel(
         """
         PROJECTS
 
@@ -164,9 +180,9 @@ class SIRASchedule(QMainWindow):
         """
         )
 
-        project_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        project_status.setMinimumHeight(120)
-        project_status.setStyleSheet(widget_style)
+        self.project_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.project_status.setMinimumHeight(120)
+        self.project_status.setStyleSheet(widget_style)
 
         # ---------------- FOCUS MODE ----------------
 
@@ -185,7 +201,7 @@ class SIRASchedule(QMainWindow):
         # Add widgets to horizontal layout
 
         bottom_layout.addWidget(ai_status)
-        bottom_layout.addWidget(project_status)
+        bottom_layout.addWidget(self.project_status)
         bottom_layout.addWidget(focus_status)
 
         # Add bottom layout to main content
@@ -201,6 +217,9 @@ class SIRASchedule(QMainWindow):
         # Add to main layout
         main_layout.addWidget(sidebar_widget)
         main_layout.addWidget(content_widget)
+
+        # Load bottom panel information
+        self.refresh_status_panels()
 
         # Bottom status bar
         status = self.statusBar()
@@ -241,22 +260,50 @@ class SIRASchedule(QMainWindow):
             padding: 10px;
             color: #D6ECFF;
         }
+        QListWidget::item:selected {
+            background: rgba(0,140,255,25);
+            border: 1px solid #008CFF;
+            border-left: 4px solid #1EA7FF;
+        }
 
+        QListWidget::item:hover {
+            background: rgba(30,167,255,20);
+        }
+                           
         QLabel {
             color: #D6ECFF;
         }
         """)
 
     def open_add_project(self):
+
         dialog = AddProjectDialog()
 
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            print(
+
+            project_db.add_project(
                 dialog.name_input.text(),
-                dialog.deadline_input.text(),
+                dialog.deadline_input.date().toString("yyyy-MM-dd"),
                 dialog.hours_input.value(),
                 dialog.priority_input.currentText()
             )
+
+            print("Project saved successfully.")
+
+            self.refresh_status_panels()
+            self.projects_page.load_projects()
+
+    def refresh_status_panels(self):
+
+        count = project_db.get_active_project_count()
+
+        self.project_status.setText(
+            f"""
+        PROJECTS
+
+        {count} Active
+        """
+        )
     
     def open_add_task(self):
         dialog = AddTaskDialog()
@@ -285,7 +332,8 @@ class SIRASchedule(QMainWindow):
 
             print("Task saved successfully.")
             self.schedule_page.load_tasks()
-
+            self.refresh_status_panels()
+           
 
 create_tables()
 
