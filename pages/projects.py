@@ -104,7 +104,8 @@ class ProjectsPage(QWidget):
             estimated,
             worked,
             remaining,
-            progress
+            progress,
+            status
             )
 
             item = QListWidgetItem()

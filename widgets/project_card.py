@@ -6,7 +6,10 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QProgressBar,
 )
-from PyQt6.QtCore import QPropertyAnimation
+from PyQt6.QtCore import (
+    QPropertyAnimation,
+    Qt,
+)
 
 
 class ProjectCard(QFrame):
@@ -19,7 +22,8 @@ class ProjectCard(QFrame):
         estimated,
         worked,
         remaining,
-        progress
+        progress,
+        status
     ):
 
         super().__init__()
@@ -40,14 +44,74 @@ class ProjectCard(QFrame):
         """)
 
         layout = QVBoxLayout()
+        layout.setSpacing(6)
+        layout.setContentsMargins(10,10,10,10)
+
+        # ---------- Top Row ----------
+        header = QFrame()
+        header.setFixedHeight(42)
+
+        header.setStyleSheet("""
+        QFrame{
+            background:#050A12;
+            border:none;
+            border-bottom:1px solid #123A5A;
+        }
+        """)
+
+        top_row = QHBoxLayout(header)
+        top_row.setContentsMargins(8, 0, 8, 0)
+        top_row.setSpacing(8)
+
 
         title = QLabel(f"🗁 {name}")
         title.setStyleSheet("""
-            font-size:18px;
+            font-size:17px;
             font-weight:bold;
             color:white;
             border:none;
         """)
+
+        status_badge = QLabel(status)
+        status_badge.setFixedHeight(30)
+        status_badge.setFixedSize(82, 26)
+
+        if status == "Completed":
+
+            status_badge.setStyleSheet("""
+            QLabel{
+                background:#1A321E;
+                color:#6CFF9E;
+                border:1px solid #42FF90;
+                border-radius:5px;
+                padding:0px;
+                font-size:11px;
+                font-weight:bold;
+            }
+            """)
+
+        else:
+
+            status_badge.setStyleSheet("""
+            QLabel{
+                background:#0B1E33;
+                color:#49C8FF;
+                border:1px solid #008CFF;
+                border-radius:5px;
+                padding:0px;
+                font-size:11px;
+                font-weight:bold;
+            }
+            """)
+
+        status_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+
+        top_row.addWidget(title)
+        top_row.addStretch()
+        top_row.addWidget(status_badge)
+
+        layout.addWidget(header)
 
         info = QLabel(
             f"""
@@ -70,7 +134,6 @@ class ProjectCard(QFrame):
             font-size:14px;
         """)
 
-        layout.addWidget(title)
         layout.addWidget(info)
 
         progress_bar = QProgressBar()

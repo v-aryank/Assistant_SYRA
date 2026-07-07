@@ -1,11 +1,14 @@
 
+import database.project_db as project_db
 from PyQt6.QtWidgets import (
     QFormLayout,
+    QLabel,
     QLineEdit,
     QDateEdit,
     QTimeEdit,
     QDialogButtonBox,
     QDialog,
+    QComboBox,
 )
 from PyQt6.QtCore import (
     QDate,
@@ -35,10 +38,32 @@ class AddTaskDialog(QDialog):
         self.end_input = QTimeEdit()
         self.end_input.setTime(QTime.currentTime())
 
+        self.project_input = QComboBox()
+
+        # Default option (no project)
+        self.project_input.addItem(
+            "None",
+            None
+        )
+
+        projects = project_db.get_active_project_names()
+
+        for project_id, name in projects:
+
+            self.project_input.addItem(
+                name,
+                project_id
+            )
+
         layout.addRow("Task Name", self.title_input)
         layout.addRow("Date", self.date_input)
         layout.addRow("Start Time", self.start_input)
         layout.addRow("End Time", self.end_input)
+        layout.addWidget(QLabel("Project"))
+        # add none as default option 
+        layout.addWidget(self.project_input)
+        
+
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok |

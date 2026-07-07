@@ -25,7 +25,7 @@ def create_tables():
 
     estimated_hours_required INTEGER,
 
-    worked_hours INTEGER DEFAULT 0,
+    worked_hours REAL DEFAULT 0,
 
     priority TEXT,
 
@@ -39,13 +39,16 @@ def create_tables():
     # ================= Tasks =================
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tasks (
+    CREATE TABLE IF NOT EXISTS tasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        date TEXT NOT NULL,
+        title TEXT,
+        date TEXT,
         start_time TEXT,
         end_time TEXT,
-        completed INTEGER DEFAULT 0
+        completed INTEGER DEFAULT 0,
+        project_id INTEGER,
+        system_generated INTEGER DEFAULT 0,
+        planned_minutes INTEGER DEFAULT 0
     )
     """)
 

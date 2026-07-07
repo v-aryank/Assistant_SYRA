@@ -85,7 +85,15 @@ def get_task(task_id):
     return task
 
 #================= Tasks =================
-def add_task(title, date, start_time, end_time):
+def add_task(
+    title,
+    date,
+    start_time,
+    end_time,
+    project_id=None,
+    system_generated=0,
+    planned_minutes=0
+    ):
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -95,14 +103,20 @@ def add_task(title, date, start_time, end_time):
             title,
             date,
             start_time,
-            end_time
+            end_time,
+            project_id,
+            system_generated,
+            planned_minutes
         )
-        VALUES (?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
         title,
         date,
         start_time,
-        end_time
+        end_time,
+        project_id,
+        system_generated,
+        planned_minutes
     ))
 
     conn.commit()
@@ -164,36 +178,108 @@ def toggle_task_completion(task_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        UPDATE tasks
-        SET completed =
-            CASE completed
-                WHEN 0 THEN 1
-                ELSE 0
-            END
-        WHERE id = ?
-    """, (task_id,))
+    UPDATE tasks
+    SET completed =
+    CASE completed
+    WHEN 0 THEN 1
+    ELSE 0
+    END
+    WHERE id=?
+    """,(task_id,))
 
     conn.commit()
+
+    cursor.execute("""
+    SELECT completed
+    FROM tasks
+    WHERE id=?
+    """,(task_id,))
+    completed = cursor.fetchone()[0]
+
     conn.close()
 
-def get_next_task(today):
+    return completed
+    
+
+def get_next_task(today, now):
 
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT title,
-               start_time,
-               end_time
+        SELECT
+        title,
+        start_time,
+        end_time
         FROM tasks
-        WHERE date = ?
-          AND completed = 0
+        WHERE
+        date=?
+        AND completed=0
+        AND end_time>=?
         ORDER BY start_time
         LIMIT 1
-    """, (today,))
+    """, (today, now))
 
     task = cursor.fetchone()
 
     conn.close()
 
     return task
+
+def add_project_session(
+        project_id,
+        project_name, 
+        date, 
+        start, 
+        end,
+        planned_minutes
+        ):
+
+    add_task(
+        title=f"Project Work — {project_name}",
+        date=date,
+        start_time=start,
+        end_time=end,
+        project_id=project_id,
+        system_generated=1,
+        planned_minutes=planned_minutes
+    )
+def get_project_task(task_id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            project_id,
+            planned_minutes,
+            system_generated
+        FROM tasks
+        WHERE id=?
+    """,(task_id,))
+
+    row = cursor.fetchone()
+
+    conn.close()
+
+    return row
+
+def has_project_session_today(project_id, today):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT COUNT(*)
+    FROM tasks
+    WHERE
+        project_id=?
+        AND date=?
+        AND system_generated=1
+    """,(project_id, today))
+
+    count = cursor.fetchone()[0]
+
+    conn.close()
+
+    return count > 0

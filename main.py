@@ -26,6 +26,7 @@ from dialogs.add_project_dialog import AddProjectDialog
 import database.project_db as project_db
 from pages.projects import ProjectsPage
 from pages.dashboard import DashboardPage
+from services.project_scheduler import generate_project_recommendation
 
 
 # SIRA Schedule Main Window SEction
@@ -340,6 +341,8 @@ create_tables()
 app = QApplication(sys.argv)
 
 window = SIRASchedule()
+
+
 window.show()
 
 sys.exit(app.exec())

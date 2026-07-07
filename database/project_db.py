@@ -175,3 +175,127 @@ def get_next_deadline():
     conn.close()
 
     return project
+
+def get_active_project_names():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            id,
+            name
+        FROM projects
+        WHERE status='Active'
+        ORDER BY name
+    """)
+
+    projects = cursor.fetchall()
+
+    conn.close()
+
+    return projects
+
+def add_worked_minutes(project_id, minutes):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    hours = minutes / 60
+
+    cursor.execute("""
+    UPDATE projects
+    SET worked_hours = worked_hours + ?
+    WHERE id=?
+    """,(hours, project_id))
+
+    cursor.execute("""
+    SELECT worked_hours,
+           estimated_hours_required
+    FROM projects
+    WHERE id=?
+    """,(project_id,))
+
+    worked, estimated = cursor.fetchone()
+
+    if estimated <= 0:
+        progress = 0
+    else:
+        progress = min(
+            int((worked / estimated) * 100),
+            100
+        )
+
+    status = "Completed" if progress >= 100 else "Active"
+
+    cursor.execute("""
+    UPDATE projects
+    SET
+        progress = ?,
+        status = ?
+    WHERE id = ?
+    """, (
+        progress,
+        status,
+        project_id
+    ))
+
+    conn.commit()
+    conn.close()
+
+def remove_worked_minutes(project_id, minutes):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    hours = minutes / 60
+
+    # Reduce worked hours (never below 0)
+    cursor.execute("""
+        UPDATE projects
+        SET worked_hours =
+            CASE
+                WHEN worked_hours - ? < 0 THEN 0
+                ELSE worked_hours - ?
+            END
+        WHERE id = ?
+    """, (
+        hours,
+        hours,
+        project_id
+    ))
+
+    # Read updated values
+    cursor.execute("""
+        SELECT worked_hours,
+               estimated_hours_required
+        FROM projects
+        WHERE id = ?
+    """, (project_id,))
+
+    worked, estimated = cursor.fetchone()
+
+    # Recalculate progress
+    if estimated <= 0:
+        progress = 0
+    else:
+        progress = min(
+            int((worked / estimated) * 100),
+            100
+        )
+
+    status = "Completed" if progress >= 100 else "Active"
+
+    cursor.execute("""
+    UPDATE projects
+    SET
+        progress = ?,
+        status = ?
+    WHERE id = ?
+    """, (
+        progress,
+        status,
+        project_id
+    ))
+    conn.commit()
+    conn.close()

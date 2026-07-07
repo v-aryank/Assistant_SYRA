@@ -1,6 +1,9 @@
 import database.task_db as task_db
 import database.project_db as project_db
 from dialogs.edit_task_dialog import EditTaskDialog
+from services.project_scheduler import (
+    generate_project_recommendation
+)
 from PyQt6.QtWidgets import (
     QPushButton,
     QWidget,
@@ -60,9 +63,11 @@ class SchedulePage(QWidget):
 
         # ================= LEFT =================
 
+        left_panel = QVBoxLayout()
+
         self.task_list = QListWidget()
 
-        content_layout.addWidget(
+        left_panel.addWidget(
             self.task_list,
             7
         )
@@ -133,11 +138,79 @@ class SchedulePage(QWidget):
         right_panel.addStretch()
 
         content_layout.addLayout(
+ 
+           left_panel,
+            7
+        )
+        content_layout.addLayout(
             right_panel,
             3
         )
 
         layout.addLayout(content_layout)
+
+        # =====================================================
+        # SIRA Recommendation Panel
+        # =====================================================
+
+        self.recommend_box = QWidget()
+
+        recommend_layout = QVBoxLayout()
+
+        title = QLabel(".✦ ݁˖🕮 SIRA Recommendation✦ ݁˖")
+
+        title.setStyleSheet("""
+        font-size:20px;
+        font-weight:bold;
+        color:#1EA7FF;
+        """)
+
+        self.recommend_text = QLabel(
+        """
+        No recommendation available.
+        """
+        )
+
+        self.recommend_text.setStyleSheet("""
+        border:1px solid #008CFF;
+        border-radius:8px;
+        padding:8px;
+        background:#07131F;
+        font-size:14px;
+        """)
+
+        buttons = QHBoxLayout()
+
+        self.accept_btn = QPushButton("Accept")
+        self.accept_btn.clicked.connect(
+            self.accept_recommendation
+        )
+
+        self.reject_btn = QPushButton("Reject")
+        self.reject_btn.clicked.connect(
+            self.reject_recommendation
+        )
+
+        buttons.addStretch()
+        buttons.addWidget(self.accept_btn)
+        buttons.addWidget(self.reject_btn)
+
+        recommend_layout.addWidget(title)
+        recommend_layout.addWidget(self.recommend_text)
+        recommend_layout.addLayout(buttons)
+
+        self.recommend_box.setLayout(
+            recommend_layout
+        )
+
+        layout.addSpacing(15)
+
+        left_panel.addWidget(
+            self.recommend_box,
+            3
+        )
+
+
 
         self.setLayout(layout)
 
@@ -270,7 +343,9 @@ class SchedulePage(QWidget):
         # ----------- Next Task ----------
         today = QDate.currentDate().toString("yyyy-MM-dd")
 
-        task = task_db.get_next_task(today)
+        task = task_db.get_next_task(
+            today,
+            QTime.currentTime().toString("HH:mm"))
 
         if task:
 
@@ -348,6 +423,12 @@ class SchedulePage(QWidget):
             remaining
         )
 
+        recommendation = generate_project_recommendation()
+
+        self.update_recommendation(
+            recommendation
+        )
+
     def update_ai_insight(
         self,
         total,
@@ -397,14 +478,109 @@ class SchedulePage(QWidget):
         {text}
         """
             )
+        
+    def update_recommendation(self, recommendation):
+        
+        self.current_recommendation = recommendation
+        if recommendation is None:
+
+            self.recommend_text.setText(
+                "No recommendation today."
+            )
+
+            return
+
+        slot = recommendation.get("recommended_slot")
+
+        minutes = int(recommendation["daily_hours"] * 60)
+
+        if slot:
+
+            free_slot_start = slot[0]
+            free_slot_end = slot[1]
+
+            message = (
+                f"Sir, you have a free time slot between "
+                f"{free_slot_start} - {free_slot_end}.\n\n"
+                f"I recommend working on:\n"
+                f"Project: {recommendation['name']}\n"
+                f"Today's Goal: {minutes} min\n\n"
+                f"Should I schedule it?"
+            )
+
+        else:
+
+            message = (
+                f"Sir, I recommend working on:\n\n"
+                f"Project: {recommendation['name']}\n"
+                f"Today's Goal: {minutes} min\n\n"
+                f"No suitable free time slot found."
+            )
+
+        self.recommend_text.setText(message)
+
+    def accept_recommendation(self):
+
+        if not self.current_recommendation:
+            return
+
+        slot = self.current_recommendation["recommended_slot"]
+
+        if slot is None:
+            return
+
+        task_db.add_project_session(
+
+            self.current_recommendation["project_id"],
+
+            self.current_recommendation["name"],
+
+            QDate.currentDate().toString("yyyy-MM-dd"),
+
+            slot[0],
+
+            slot[1],
+
+            int(self.current_recommendation["daily_hours"] * 60)
+
+        )
+
+        self.load_tasks()
+    def reject_recommendation(self):
+
+         self.recommend_box.hide()
 
 
     def toggle_task_completed(self, item):
 
         task_id = item.data(Qt.ItemDataRole.UserRole)
 
-        task_db.toggle_task_completion(task_id)
+        completed = task_db.toggle_task_completion(task_id)
+        task = task_db.get_project_task(task_id)
 
+        if task:
+
+            project_id, minutes, system = task
+
+            if system:
+
+                if completed:
+
+                    project_db.add_worked_minutes(
+                        project_id,
+                        minutes
+                    )
+
+                else:
+
+                    project_db.remove_worked_minutes(
+                        project_id,
+                        minutes
+                    )
+        
+        self.main_window.projects_page.load_projects()
+
+        self.main_window.refresh_status_panels()
         self.load_tasks()
 
     
