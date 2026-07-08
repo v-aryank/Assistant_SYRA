@@ -65,7 +65,9 @@ class ProjectsPage(QWidget):
 
         self.project_list.clear()
 
-        projects = project_db.get_active_projects()
+        projects = project_db.get_all_projects()
+
+      
 
         for project in projects:
 
@@ -87,15 +89,6 @@ class ProjectsPage(QWidget):
                 "yyyy-MM-dd"
             ).toString("dd MMM yyyy")
 
-            text = (
-                f"🗁 {name}\n\n"
-                f"🗓 Deadline : {date}\n"
-                f"⚡︎ Priority : {priority}\n"
-                f"⏲ Estimated : {estimated} h\n"
-                f"⏲ Worked : {worked} h\n"
-                f"⏱ Remaining : {remaining} h\n"
-                f"🗠 Progress : {progress}% h\n" 
-            )
 
             card = ProjectCard(
             name,

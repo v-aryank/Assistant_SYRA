@@ -92,6 +92,38 @@ def get_active_project_count():
 
     return count
 
+def get_all_projects():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT 
+        id,
+        name,
+        deadline,
+        estimated_hours_required,
+        worked_hours,
+        priority,
+        progress,
+        status
+
+        FROM projects
+
+        ORDER BY 
+        CASE 
+            WHEN status='Active' THEN 0
+            ELSE 1
+        END,
+        deadline
+    """)
+
+    projects = cursor.fetchall()
+
+    conn.close()
+
+    return projects
+
 
 def delete_project(project_id):
 
