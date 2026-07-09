@@ -27,8 +27,8 @@ class DashboardPage(QWidget):
             font-weight: bold;
             color: #1EA7FF;
         """)
-        subtitle = QLabel("SIRA Command Center")
-        self.greeting = QLabel("Hello, SIR..")
+        subtitle = QLabel("SYRA Command Center")
+        self.greeting = QLabel("Hello, Boss..")
         self.date_label = QLabel()
         self.time_label = QLabel()
         self.system_label = QLabel("User: V. Aryan Kabir | System Status: Idle")
@@ -132,7 +132,7 @@ Idle
         else:
             greeting = "It's a Great Night"
 
-        self.greeting.setText(f"{greeting}, SIR..")
+        self.greeting.setText(f"{greeting}, Boss..")
 
         self.date_label.setText(
             now.toString("dddd, dd MMMM yyyy")

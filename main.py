@@ -29,12 +29,12 @@ from pages.dashboard import DashboardPage
 from services.project_scheduler import generate_project_recommendation
 
 
-# SIRA Schedule Main Window SEction
-class SIRASchedule(QMainWindow):
+# SYRA Schedule Main Window SEction
+class SYRASchedule(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("SIRA - Assistant")
+        self.setWindowTitle("SYRA - Assistant")
         self.setGeometry(100, 100, 1400, 800)
 
         # Main widget
@@ -64,7 +64,7 @@ class SIRASchedule(QMainWindow):
             color: #1EA7FF;
         """)
 
-        title = QLabel("SIRA")
+        title = QLabel("SYRA")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setStyleSheet("""
             font-size: 30px;
@@ -225,7 +225,7 @@ class SIRASchedule(QMainWindow):
         # Bottom status bar
         status = self.statusBar()
         status.showMessage(
-        "SIRA CORE | Voice: Offline | AI: Idle | Schedule Engine: Ready"
+        "SYRA CORE | Voice: Offline | AI: Idle | Schedule Engine: Ready"
         )   
 
         # Global style
@@ -340,7 +340,7 @@ create_tables()
 
 app = QApplication(sys.argv)
 
-window = SIRASchedule()
+window = SYRASchedule()
 
 
 window.show()

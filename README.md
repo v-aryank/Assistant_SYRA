@@ -1,12 +1,12 @@
-# SIRA Schedule Assistant - Development Log
+# SYRA Schedule Assistant - Development Log
 
 ## Sprint 1 
 
 ### UI
-- Created first SIRA Schedule Assistant window
+- Created first SYRA Schedule Assistant window
 - Implemented blue HUD theme matching Conky monitors
 - Added sidebar navigation
-- Added SIRA Core branding
+- Added SYRA Core branding
 - Added status panels
 
 ### Features
@@ -51,7 +51,7 @@
 - Dynamic page titles.
 
 ### Architecture Decisions
-- Dashboard will become the future SIRA homepage.
+- Dashboard will become the future SYRA homepage.
 - Schedule page will be the operational workspace with tasks and productivity summary.
 - Add Task and Add Project buttons will move into their respective pages.
 - Sidebar will remain dedicated to navigation only.

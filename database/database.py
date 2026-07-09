@@ -1,6 +1,6 @@
 import sqlite3
 
-DB_NAME = "sira_schedule.db"
+DB_NAME = "SYRA_schedule.db"
 
 
 def get_connection():

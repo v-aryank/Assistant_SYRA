@@ -150,14 +150,14 @@ class SchedulePage(QWidget):
         layout.addLayout(content_layout)
 
         # =====================================================
-        # SIRA Recommendation Panel
+        # SYRA Recommendation Panel
         # =====================================================
 
         self.recommend_box = QWidget()
 
         recommend_layout = QVBoxLayout()
 
-        title = QLabel(".✦ ݁˖🕮 SIRA Recommendation✦ ݁˖")
+        title = QLabel(".✦ ݁˖🕮 SYRA Recommendation✦ ݁˖")
 
         title.setStyleSheet("""
         font-size:20px;
