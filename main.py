@@ -21,6 +21,7 @@ from PyQt6.QtCore import (
     QSize,
 )
 from PyQt6.QtGui import QMovie
+from config.version import SYRA_VERSION
 from dialogs.add_task_dialog import AddTaskDialog
 from dialogs.add_project_dialog import AddProjectDialog
 import database.project_db as project_db
@@ -64,13 +65,14 @@ class SYRASchedule(QMainWindow):
             color: #1EA7FF;
         """)
 
-        title = QLabel("SYRA")
+        title = QLabel(
+            f'<span style="font-size: 30px; color: #1EA7FF; font-weight: bold; letter-spacing: 3px;">SYRA</span> '
+            f'<span style="font-size: 10px; color: #74B8FF; letter-spacing: 1px;">{SYRA_VERSION}</span>'
+        )
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setTextFormat(Qt.TextFormat.RichText)
         title.setStyleSheet("""
-            font-size: 30px;
             color: #1EA7FF;
-            font-weight: bold;
-            letter-spacing: 3px;
         """)
 
         subtitle = QLabel("SYSTEM ACTIVATED")

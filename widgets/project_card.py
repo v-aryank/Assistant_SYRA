@@ -9,10 +9,14 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import (
     QPropertyAnimation,
     Qt,
+    pyqtSignal,
 )
 
 
 class ProjectCard(QFrame):
+     
+    edit_clicked = pyqtSignal()
+    delete_clicked = pyqtSignal()
 
     def __init__(
         self,
@@ -174,6 +178,7 @@ class ProjectCard(QFrame):
             background:#16476A;
         }
         """)
+
         self.delete_btn = QPushButton("Delete")
         self.delete_btn.setStyleSheet("""
         QPushButton{
@@ -192,6 +197,15 @@ class ProjectCard(QFrame):
 
         button_layout.addWidget(self.edit_btn)
         button_layout.addWidget(self.delete_btn)
+
+        self.edit_btn.clicked.connect(
+            self.edit_clicked.emit
+        )
+
+
+        self.delete_btn.clicked.connect(
+            self.delete_clicked.emit
+        )
 
         layout.addLayout(button_layout)
 

@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QListWidgetItem,
     QPushButton,
     QMenu,
+    QMessageBox,
 )
 
 from PyQt6.QtCore import QDate, Qt
@@ -101,6 +102,7 @@ class ProjectsPage(QWidget):
             status
             )
 
+
             item = QListWidgetItem()
 
             item.setSizeHint(card.sizeHint())
@@ -108,6 +110,17 @@ class ProjectsPage(QWidget):
             item.setData(
                 Qt.ItemDataRole.UserRole,
                 project_id
+            )
+
+            card.edit_clicked.connect(
+                lambda checked=False, i=item:
+                self.edit_project(i)
+            )
+
+
+            card.delete_clicked.connect(
+                lambda checked=False, pid=project_id:
+                self.delete_project(pid)
             )
 
             self.project_list.addItem(item)
@@ -190,3 +203,25 @@ class ProjectsPage(QWidget):
 
                 self.load_projects()
                 self.main_window.refresh_status_panels()
+
+    def delete_project(self, project_id):
+
+        reply = QMessageBox.question(
+            self,
+            "Delete Project",
+            "Are you sure you want to delete this project?\n\nThis action cannot be undone.",
+            QMessageBox.StandardButton.Yes |
+            QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+
+        if reply == QMessageBox.StandardButton.Yes:
+
+            project_db.delete_project(
+                project_id
+            )
+
+            self.load_projects()
+
+            self.main_window.refresh_status_panels()
