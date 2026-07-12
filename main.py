@@ -75,7 +75,7 @@ class SYRASchedule(QMainWindow):
             color: #1EA7FF;
         """)
 
-        subtitle = QLabel("SYSTEM ACTIVATED")
+        subtitle = QLabel("User: V. Aryan | System: Ready")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setStyleSheet("""
             font-size: 11px;
