@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QPushButton,
     QStackedWidget,
+    QFrame,
 )
 from PyQt6.QtCore import (
     Qt,
@@ -217,8 +218,22 @@ class SYRASchedule(QMainWindow):
         content_widget = QWidget()
         content_widget.setLayout(content)
 
-        # Add to main layout
+
+        # Separator between sidebar and content
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.VLine)
+        separator.setFixedWidth(2)
+        separator.setStyleSheet("""
+            background-color: qlineargradient(
+                x1:0, y1:0, x2:0, y2:1,
+                stop:0 rgba(30,167,255,0),
+                stop:0.5 rgba(30,167,255,180),
+                stop:1 rgba(30,167,255,0)
+            );
+            border: none;
+        """)
         main_layout.addWidget(sidebar_widget)
+        main_layout.addWidget(separator)
         main_layout.addWidget(content_widget)
 
         # Load bottom panel information
