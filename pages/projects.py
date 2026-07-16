@@ -202,7 +202,7 @@ class ProjectsPage(QWidget):
                 )
 
                 self.load_projects()
-                self.main_window.refresh_status_panels()
+                self.refresh_all()
 
     def delete_project(self, project_id):
 

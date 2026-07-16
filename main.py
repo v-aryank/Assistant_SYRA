@@ -237,7 +237,7 @@ class SYRASchedule(QMainWindow):
         main_layout.addWidget(content_widget)
 
         # Load bottom panel information
-        self.refresh_status_panels()
+        self.refresh_all()
 
         # Bottom status bar
         status = self.statusBar()
@@ -308,8 +308,7 @@ class SYRASchedule(QMainWindow):
 
             print("Project saved successfully.")
 
-            self.refresh_status_panels()
-            self.projects_page.load_projects()
+            self.refresh_all()
 
     def refresh_status_panels(self):
 
@@ -349,8 +348,17 @@ class SYRASchedule(QMainWindow):
             )
 
             print("Task saved successfully.")
-            self.schedule_page.load_tasks()
-            self.refresh_status_panels()
+            self.refresh_all()
+
+    def refresh_all(self):
+
+        self.schedule_page.load_tasks()
+
+        self.projects_page.load_projects()
+
+        #self.dashboard_page.refresh_dashboard()
+
+        self.refresh_status_panels()
            
 
 create_tables()

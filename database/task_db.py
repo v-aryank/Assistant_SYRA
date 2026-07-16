@@ -283,3 +283,26 @@ def has_project_session_today(project_id, today):
     conn.close()
 
     return count > 0
+
+def get_project_minutes_today(project_id, date):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COALESCE(SUM(planned_minutes), 0)
+        FROM tasks
+        WHERE
+            project_id = ?
+            AND date = ?
+            AND system_generated = 1
+    """, (
+        project_id,
+        date
+    ))
+
+    total = cursor.fetchone()[0]
+
+    conn.close()
+
+    return total
