@@ -52,5 +52,29 @@ def create_tables():
     )
     """)
 
+    #================== Routines =====================
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS routines(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    title TEXT NOT NULL,
+
+    start_time TEXT NOT NULL,
+
+    end_time TEXT NOT NULL,
+
+    sunday INTEGER DEFAULT 0,
+    monday INTEGER DEFAULT 0,
+    tuesday INTEGER DEFAULT 0,
+    wednesday INTEGER DEFAULT 0,
+    thursday INTEGER DEFAULT 0,
+    friday INTEGER DEFAULT 0,
+    saturday INTEGER DEFAULT 0,
+                   
+    enabled INTEGER DEFAULT 1
+    );
+    """)
+
     conn.commit()
     conn.close()

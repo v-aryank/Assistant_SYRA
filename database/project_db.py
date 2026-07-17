@@ -248,7 +248,12 @@ def add_worked_minutes(project_id, minutes):
     WHERE id=?
     """,(project_id,))
 
-    worked, estimated = cursor.fetchone()
+    row = cursor.fetchone()
+
+    if row is None:
+        return
+
+    worked, estimated = row
 
     if estimated <= 0:
         progress = 0
@@ -305,7 +310,12 @@ def remove_worked_minutes(project_id, minutes):
         WHERE id = ?
     """, (project_id,))
 
-    worked, estimated = cursor.fetchone()
+    row = cursor.fetchone()
+
+    if row is None:
+        return
+
+    worked, estimated = row
 
     # Recalculate progress
     if estimated <= 0:

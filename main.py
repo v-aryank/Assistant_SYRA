@@ -28,7 +28,8 @@ from dialogs.add_project_dialog import AddProjectDialog
 import database.project_db as project_db
 from pages.projects import ProjectsPage
 from pages.dashboard import DashboardPage
-from services.project_scheduler import generate_project_recommendation
+from pages.routines import RoutinePage 
+from services.routine_scheduler import inject_today_routines
 
 
 # SYRA Schedule Main Window SEction
@@ -115,6 +116,12 @@ class SYRASchedule(QMainWindow):
                 self.dashboard_page
             )
         )
+
+        btn_routine.clicked.connect(
+            lambda: self.pages.setCurrentWidget(
+                self.routine_page
+            )
+        )
         sidebar.addStretch()
         sidebar.addWidget(btn_settings)
 
@@ -133,9 +140,11 @@ class SYRASchedule(QMainWindow):
         self.schedule_page = SchedulePage(self)
         self.projects_page = ProjectsPage(self)
         self.dashboard_page = DashboardPage(self)
+        self.routine_page = RoutinePage(self)
         self.pages.addWidget(self.schedule_page)
         self.pages.addWidget(self.projects_page)
         self.pages.addWidget(self.dashboard_page)
+        self.pages.addWidget(self.routine_page)
 
         content.addWidget(self.pages)
         self.pages.setCurrentWidget(
@@ -362,6 +371,8 @@ class SYRASchedule(QMainWindow):
            
 
 create_tables()
+
+inject_today_routines()
 
 app = QApplication(sys.argv)
 

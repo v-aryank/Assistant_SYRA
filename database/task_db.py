@@ -194,7 +194,9 @@ def toggle_task_completion(task_id):
     FROM tasks
     WHERE id=?
     """,(task_id,))
-    completed = cursor.fetchone()[0]
+    row = cursor.fetchone()
+
+    completed = row[0] if row else 0
 
     conn.close()
 
@@ -306,3 +308,42 @@ def get_project_minutes_today(project_id, date):
     conn.close()
 
     return total
+
+def routine_exists_today(title, date):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM tasks
+        WHERE
+            title=?
+            AND date=?
+            AND system_generated=1
+    """, (
+        title,
+        date
+    ))
+
+    exists = cursor.fetchone()[0]
+
+    conn.close()
+
+    return exists > 0
+
+def delete_today_routines(today):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM tasks
+        WHERE
+            date=?
+            AND system_generated=1
+            AND project_id IS NULL
+    """, (today,))
+
+    conn.commit()
+    conn.close()

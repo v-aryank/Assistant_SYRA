@@ -1,5 +1,7 @@
 import database.task_db as task_db
 import database.project_db as project_db
+import database.routine_db as routine_db
+
 from dialogs.edit_task_dialog import EditTaskDialog
 from services.project_scheduler import (
     generate_daily_schedule
@@ -621,7 +623,7 @@ class SchedulePage(QWidget):
 
             project_id, minutes, system = task
 
-            if system:
+            if system and project_id is not None:
 
                 if completed:
 
