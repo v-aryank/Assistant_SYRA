@@ -4,6 +4,8 @@ from datetime import datetime, date
 
 def add_routine(
     title,
+    category,
+    visible_in_schedule,
     start_time,
     end_time,
     sunday,
@@ -22,6 +24,8 @@ def add_routine(
     cursor.execute("""
         INSERT INTO routines(
             title,
+            category,
+            visible_in_schedule,
             start_time,
             end_time,
             sunday,
@@ -33,9 +37,11 @@ def add_routine(
             saturday,
             enabled
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         title,
+        category,
+        visible_in_schedule,
         start_time,
         end_time,
         sunday,
@@ -55,6 +61,8 @@ def add_routine(
 def update_routine(
     routine_id,
     title,
+    category,
+    visible_in_schedule,
     start_time,
     end_time,
     sunday,
@@ -74,6 +82,8 @@ def update_routine(
         UPDATE routines
         SET
             title=?,
+            category=?,
+            visible_in_schedule=?,
             start_time=?,
             end_time=?,
             sunday=?,
@@ -87,6 +97,8 @@ def update_routine(
         WHERE id=?
     """, (
         title,
+        category,
+        visible_in_schedule,
         start_time,
         end_time,
         sunday,
@@ -127,6 +139,8 @@ def get_all_routines():
         SELECT
             id,
             title,
+            category,
+            visible_in_schedule,
             start_time,
             end_time,
             sunday,
@@ -159,6 +173,8 @@ def get_today_routines():
         SELECT
             id,
             title,
+            category,
+            visible_in_schedule,
             start_time,
             end_time
         FROM routines
@@ -185,6 +201,8 @@ def get_routine(routine_id):
     cursor.execute("""
         SELECT
             title,
+            category,
+            visible_in_schedule,
             start_time,
             end_time,
             sunday,

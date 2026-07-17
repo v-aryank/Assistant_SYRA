@@ -87,18 +87,20 @@ class RoutinePage(QWidget):
         for routine in routines:
 
             (
-                rid,
-                title,
-                start,
-                end,
-                sun,
-                mon,
-                tue,
-                wed,
-                thu,
-                fri,
-                sat,
-                enabled
+            rid,
+            title,
+            category,
+            visible,
+            start,
+            end,
+            sun,
+            mon,
+            tue,
+            wed,
+            thu,
+            fri,
+            sat,
+            enabled
             ) = routine
 
             flags = [
@@ -120,10 +122,8 @@ class RoutinePage(QWidget):
             status = "✓" if enabled else "✗"
 
             text = (
-                f"{status}  "
-                f"{start} - {end}    "
-                f"{title}\n"
-                f"{repeat}"
+                f"{status}  {start} - {end}    {title}\n"
+                f"{category} | {repeat}"
             )
 
             item = QListWidgetItem(text)
@@ -147,6 +147,10 @@ class RoutinePage(QWidget):
             routine_db.add_routine(
 
                 dialog.title_input.text(),
+
+                dialog.category_input.currentText(),
+
+                dialog.show_in_schedule.isChecked(),
 
                 dialog.start_input.time().toString("HH:mm"),
 
@@ -222,6 +226,10 @@ class RoutinePage(QWidget):
                 routine_id,
 
                 dialog.title_input.text(),
+
+                dialog.category_input.currentText(),
+
+                dialog.show_in_schedule.isChecked(),
 
                 dialog.start_input.time().toString("HH:mm"),
 

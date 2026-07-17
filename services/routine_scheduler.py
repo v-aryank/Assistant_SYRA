@@ -17,9 +17,14 @@ def inject_today_routines():
         (
             routine_id,
             title,
+            category,
+            visible_in_schedule,
             start,
             end
         ) = routine
+
+        if not visible_in_schedule:
+            continue
 
         task_title = f"Routine — {title}"
 

@@ -1,5 +1,102 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
+from services.free_time_analyzer import get_free_time_slots
+
+import database.project_db as project_db
+
+from database.project_db import get_all_projects
+
+MAX_FOCUS_SESSION = 90
+
+TIME_FORMAT = "%H:%M"
+
+
+def time_to_minutes(t):
+
+    dt = datetime.strptime(t, TIME_FORMAT)
+
+    return dt.hour * 60 + dt.minute
+
+
+def minutes_to_time(minutes):
+
+    hour = minutes // 60
+
+    minute = minutes % 60
+
+    return f"{hour:02}:{minute:02}"
+
+def get_sorted_projects():
+
+    projects = get_all_projects()
+
+    scored = []
+
+    for project in projects:
+
+        if project[7] != "Active":
+            continue
+
+        scored.append(
+            calculate_project_score(project)
+        )
+
+    scored.sort(
+        key=lambda p: p["score"],
+        reverse=True
+    )
+
+    return scored
+
+
+def allocate_projects():
+
+    slots = get_free_time_slots()
+
+    projects = get_sorted_projects()
+
+    allocation = []
+
+    project_index = 0
+
+    for slot in slots:
+
+        if project_index >= len(projects):
+            break
+
+        project = projects[project_index]
+
+        allocation.append({
+
+            "project": project["name"],
+
+            "start": slot["start"],
+
+            "end": slot["end"],
+
+            "minutes": slot["duration"]
+
+        })
+
+        project_index += 1
+
+    return allocation
+
+def preview_schedule():
+
+    allocation = allocate_projects()
+
+    print("\nToday's AI Schedule\n")
+
+    for item in allocation:
+
+        print(
+            f'{item["start"]} - {item["end"]}'
+        )
+
+        print(item["project"])
+
+        print()
 
 def calculate_project_score(project):
 
@@ -66,6 +163,8 @@ def calculate_project_score(project):
 
         "remaining_hours":remaining_hours,
 
+        "remaining_minutes": int(remaining_hours * 60),
+
         "remaining_days":remaining_days,
 
         "daily_hours":round(
@@ -89,13 +188,93 @@ def calculate_project_risk(project):
 
 def generate_daily_schedule():
 
-    pass
+    slots = get_free_time_slots()
+
+    projects = project_db.get_active_projects()
+
+    if not projects:
+        return []
+
+    scored = []
+
+    for project in projects:
+
+        scored.append(
+            calculate_project_score(project)
+        )
+
+    scored.sort(
+        key=lambda x: x["score"],
+        reverse=True
+    )
+
+    generated = []
+
+    for project in scored:
+
+        remaining = project["remaining_minutes"]
+
+        slot_index = 0
+
+        while remaining > 0 and slot_index < len(slots):
+
+            slot = slots[slot_index]
+
+            available = slot["duration"]
+
+            if available < 30:
+
+                slot_index += 1
+                continue
+
+            work = min(
+                available,
+                remaining,
+                MAX_FOCUS_SESSION
+            )
+
+            start_minutes = time_to_minutes(
+                slot["start"]
+            )
+
+            end_minutes = start_minutes + work
+
+            generated.append({
+
+                "project_id": project["project_id"],
+
+                "title": f"Work on {project['name']}",
+
+                "start": minutes_to_time(start_minutes),
+
+                "end": minutes_to_time(end_minutes),
+
+                "minutes": work
+
+            })
+
+            remaining -= work
+
+            available -= work
+
+            if available <= 0:
+
+                slots.pop(slot_index)
+
+            else:
+
+                slot["start"] = minutes_to_time(end_minutes)
+
+                slot["duration"] = available
+
+                slot_index += 1
+
+    return generated
 
 
+def find_available_slots():
 
-def find_available_slots(tasks):
-
-    pass
+    return get_free_time_slots()
 
 
 

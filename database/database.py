@@ -59,6 +59,10 @@ def create_tables():
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
     title TEXT NOT NULL,
+                   
+    category TEXT DEFAULT 'General',
+                   
+    visible_in_schedule INTEGER DEFAULT 1,
 
     start_time TEXT NOT NULL,
 

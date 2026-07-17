@@ -6,7 +6,8 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
     QTimeEdit,
-    QCheckBox
+    QCheckBox,
+    QComboBox
 )
 
 from PyQt6.QtCore import QTime
@@ -27,6 +28,31 @@ class AddRoutineDialog(QDialog):
 
         layout.addWidget(self.title_input)
 
+        self.category_input = QComboBox()
+
+        self.category_input.addItems([
+            "Personal",
+            "University",
+            "Study",
+            "Meal",
+            "Health",
+            "Prayer",
+            "Travel",
+            "Sleep",
+            "Other"
+        ])
+
+        layout.addWidget(QLabel("Category"))
+        layout.addWidget(self.category_input)
+
+        self.show_in_schedule = QCheckBox(
+            "Show in Schedule"
+        )
+
+        self.show_in_schedule.setChecked(True)
+
+        layout.addWidget(self.show_in_schedule)
+        
         layout.addWidget(QLabel("Start Time"))
 
         self.start_input = QTimeEdit()
@@ -91,6 +117,8 @@ class AddRoutineDialog(QDialog):
 
             (
                 title,
+                category,
+                visible,
                 start,
                 end,
                 sun,
@@ -104,6 +132,10 @@ class AddRoutineDialog(QDialog):
             ) = routine
 
             self.title_input.setText(title)
+
+            self.category_input.setCurrentText(category)
+
+            self.show_in_schedule.setChecked(bool(visible))
 
             self.start_input.setTime(
                 QTime.fromString(start, "HH:mm")
