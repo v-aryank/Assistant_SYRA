@@ -162,6 +162,37 @@ def get_all_routines():
     return routines
 
 
+def get_routine(routine_id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            title,
+            category,
+            visible_in_schedule,
+            start_time,
+            end_time,
+            sunday,
+            monday,
+            tuesday,
+            wednesday,
+            thursday,
+            friday,
+            saturday,
+            enabled
+        FROM routines
+        WHERE id=?
+    """, (routine_id,))
+
+    routine = cursor.fetchone()
+
+    conn.close()
+
+    return routine
+
+
 def get_today_routines():
 
     weekday = date.today().strftime("%A").lower()
@@ -193,32 +224,29 @@ def get_today_routines():
     return routines
 
 
-def get_routine(routine_id):
+def get_hidden_routines_for_today():
+
+    weekday = date.today().strftime("%A").lower()
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
+    query = f"""
         SELECT
-            title,
-            category,
-            visible_in_schedule,
             start_time,
-            end_time,
-            sunday,
-            monday,
-            tuesday,
-            wednesday,
-            thursday,
-            friday,
-            saturday,
-            enabled
+            end_time
         FROM routines
-        WHERE id=?
-    """, (routine_id,))
+        WHERE
+            {weekday}=1
+            AND enabled=1
+            AND visible_in_schedule=0
+        ORDER BY start_time
+    """
 
-    routine = cursor.fetchone()
+    cursor.execute(query)
+
+    routines = cursor.fetchall()
 
     conn.close()
 
-    return routine
+    return routines

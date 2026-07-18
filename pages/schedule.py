@@ -30,6 +30,8 @@ class SchedulePage(QWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.main_window = parent
+        self.recommendations = []
+        self.current_recommendation_index = 0
 
         layout = QVBoxLayout()
         content_layout = QVBoxLayout()
@@ -270,6 +272,8 @@ class SchedulePage(QWidget):
             tomorrow,
             end_week
         )
+
+
         # ================= LOAD TASKS =================
 
         for task in tasks:
@@ -425,13 +429,18 @@ class SchedulePage(QWidget):
             remaining
         )
 
-        recommendations = generate_daily_schedule()
+        self.recommendations = generate_daily_schedule()
 
-        if recommendations:
+        self.current_recommendation_index = 0
+
+        if self.recommendations:
+
             self.update_recommendation(
-                recommendations[0]
+                self.recommendations[0]
             )
+
         else:
+
             self.update_recommendation(None)
 
     def update_ai_insight(
@@ -605,10 +614,27 @@ class SchedulePage(QWidget):
         
     def reject_recommendation(self):
 
-        self.current_recommendation = None
+        if not self.recommendations:
+            return
 
-        self.recommend_text.setText(
-            "Recommendation dismissed."
+        self.current_recommendation_index += 1
+
+        if self.current_recommendation_index >= len(self.recommendations):
+
+            self.current_recommendation = None
+
+            self.recommend_text.setText(
+                "No more recommendations for today."
+            )
+
+            return
+
+        self.update_recommendation(
+
+            self.recommendations[
+                self.current_recommendation_index
+            ]
+
         )
 
 
@@ -640,6 +666,8 @@ class SchedulePage(QWidget):
                     )
         
         self.main_window.refresh_all()
+
+        
 
     
     def task_context_menu(self, position):

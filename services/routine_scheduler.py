@@ -12,6 +12,8 @@ def inject_today_routines():
 
     task_db.delete_today_routines(today)
 
+    
+
     for routine in routines:
 
         (
@@ -30,7 +32,9 @@ def inject_today_routines():
 
         if task_db.routine_exists_today(
             task_title,
-            today
+            today,
+            start,
+            end
         ):
             continue
 

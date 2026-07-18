@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 
 import database.project_db as project_db
 import database.task_db as task_db
+import database.routine_db as routine_db
 
 
 def generate_project_recommendation():
@@ -109,15 +110,7 @@ def generate_project_recommendation():
             "urgency_score": urgency_score
 
         })
-    #find free slots
-    tasks = task_db.get_tasks(
-        "Today",
-        today.strftime("%Y-%m-%d"),
-        None,
-        None
-    )
-
-    free_slots = find_free_time(tasks)
+    
 
     
     recommendations.sort(
@@ -131,8 +124,10 @@ def generate_project_recommendation():
     return recommendations
 
 # --------------- Find free time ---------------
+def find_free_time(tasks, hidden_routines=None):
 
-def find_free_time(tasks):
+    if hidden_routines is None:
+        hidden_routines = []
 
     now = datetime.now()
 
@@ -173,6 +168,38 @@ def find_free_time(tasks):
                 day_end.strftime("%H:%M")
             )
         )
+
+    for start, end in hidden_routines:
+
+        start_time = datetime.strptime(start, "%H:%M")
+        end_time = datetime.strptime(end, "%H:%M")
+
+        new_slots = []
+
+        for free_start, free_end in free_slots:
+
+            fs = datetime.strptime(free_start, "%H:%M")
+            fe = datetime.strptime(free_end, "%H:%M")
+
+            if end_time <= fs or start_time >= fe:
+                new_slots.append((free_start, free_end))
+                continue
+
+            if fs < start_time:
+                new_slots.append((
+                    fs.strftime("%H:%M"),
+                    start_time.strftime("%H:%M")
+                ))
+
+            if end_time < fe:
+                new_slots.append((
+                    end_time.strftime("%H:%M"),
+                    fe.strftime("%H:%M")
+                ))
+
+        free_slots = new_slots
+
+    
 
     return free_slots
 
@@ -242,7 +269,9 @@ def generate_daily_schedule():
         None
     )
 
-    free_slots = find_free_time(tasks)
+    hidden_routines = routine_db.get_hidden_routines_for_today()
+
+    free_slots = find_free_time(tasks, hidden_routines)
 
     result = []
 

@@ -309,7 +309,12 @@ def get_project_minutes_today(project_id, date):
 
     return total
 
-def routine_exists_today(title, date):
+def routine_exists_today(
+        title,
+        date,
+        start_time,
+        end_time
+    ):
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -318,12 +323,16 @@ def routine_exists_today(title, date):
         SELECT COUNT(*)
         FROM tasks
         WHERE
-            title=?
-            AND date=?
-            AND system_generated=1
+        title=?
+        AND date=?
+        AND start_time=?
+        AND end_time=?
+        AND system_generated=1
     """, (
         title,
-        date
+        date,
+        start_time,
+        end_time
     ))
 
     exists = cursor.fetchone()[0]
