@@ -347,3 +347,49 @@ def delete_today_routines(today):
 
     conn.commit()
     conn.close()
+
+def get_unfinished_ai_tasks():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            id,
+            title,
+            start_time,
+            end_time,
+            planned_minutes,
+            project_id
+        FROM tasks
+        WHERE
+            system_generated=1
+            AND completed=0
+    """)
+
+    tasks = cursor.fetchall()
+
+    conn.close()
+
+    return tasks
+
+def update_task_time(task_id, start_time, end_time):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE tasks
+        SET
+            start_time=?,
+            end_time=?,
+            status='Pending'
+        WHERE id=?
+    """, (
+        start_time,
+        end_time,
+        task_id
+    ))
+
+    conn.commit()
+    conn.close()

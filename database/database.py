@@ -46,6 +46,7 @@ def create_tables():
         start_time TEXT,
         end_time TEXT,
         completed INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'Pending',
         project_id INTEGER,
         system_generated INTEGER DEFAULT 0,
         planned_minutes INTEGER DEFAULT 0

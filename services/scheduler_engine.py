@@ -3,8 +3,10 @@ from datetime import date, datetime
 from services.free_time_analyzer import get_free_time_slots
 
 import database.project_db as project_db
+import database.task_db as task_db
 
 from database.project_db import get_all_projects
+from services.day_workload import get_today_workload
 
 MAX_FOCUS_SESSION = 90
 
@@ -48,55 +50,6 @@ def get_sorted_projects():
 
     return scored
 
-
-def allocate_projects():
-
-    slots = get_free_time_slots()
-
-    projects = get_sorted_projects()
-
-    allocation = []
-
-    project_index = 0
-
-    for slot in slots:
-
-        if project_index >= len(projects):
-            break
-
-        project = projects[project_index]
-
-        allocation.append({
-
-            "project": project["name"],
-
-            "start": slot["start"],
-
-            "end": slot["end"],
-
-            "minutes": slot["duration"]
-
-        })
-
-        project_index += 1
-
-    return allocation
-
-def preview_schedule():
-
-    allocation = allocate_projects()
-
-    print("\nToday's AI Schedule\n")
-
-    for item in allocation:
-
-        print(
-            f'{item["start"]} - {item["end"]}'
-        )
-
-        print(item["project"])
-
-        print()
 
 def calculate_project_score(project):
 
@@ -181,103 +134,5 @@ def calculate_project_score(project):
 
 
 def calculate_project_risk(project):
-
-    pass
-
-
-
-def generate_daily_schedule():
-
-    slots = get_free_time_slots()
-
-    projects = project_db.get_active_projects()
-
-    if not projects:
-        return []
-
-    scored = []
-
-    for project in projects:
-
-        scored.append(
-            calculate_project_score(project)
-        )
-
-    scored.sort(
-        key=lambda x: x["score"],
-        reverse=True
-    )
-
-    generated = []
-
-    for project in scored:
-
-        remaining = project["remaining_minutes"]
-
-        slot_index = 0
-
-        while remaining > 0 and slot_index < len(slots):
-
-            slot = slots[slot_index]
-
-            available = slot["duration"]
-
-            if available < 30:
-
-                slot_index += 1
-                continue
-
-            work = min(
-                available,
-                remaining,
-                MAX_FOCUS_SESSION
-            )
-
-            start_minutes = time_to_minutes(
-                slot["start"]
-            )
-
-            end_minutes = start_minutes + work
-
-            generated.append({
-
-                "project_id": project["project_id"],
-
-                "title": f"Work on {project['name']}",
-
-                "start": minutes_to_time(start_minutes),
-
-                "end": minutes_to_time(end_minutes),
-
-                "minutes": work
-
-            })
-
-            remaining -= work
-
-            available -= work
-
-            if available <= 0:
-
-                slots.pop(slot_index)
-
-            else:
-
-                slot["start"] = minutes_to_time(end_minutes)
-
-                slot["duration"] = available
-
-                slot_index += 1
-
-    return generated
-
-
-def find_available_slots():
-
-    return get_free_time_slots()
-
-
-
-def reschedule_task(task):
 
     pass
