@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QLabel,
 )
 from PyQt6.QtCore import Qt, QDateTime, QTimer
-
+from utils import theme
 from widgets.dashboard.system_card import SystemCard
 from widgets.dashboard.core_widget import CoreWidget
 from widgets.dashboard.activity_log import ActivityLog
@@ -27,25 +27,25 @@ class DashboardPage(QWidget):
         # ================= Header =================
 
         title = QLabel("DASHBOARD")
-        title.setStyleSheet("""
+        title.setStyleSheet(f"""
             font-size: 13px;
             font-weight: bold;
             letter-spacing: 3px;
-            color: #1EA7FF;
+            color: {theme.PRIMARY};
             border: none;
         """)
 
         self.greeting = QLabel("Hello, Boss..")
-        self.greeting.setStyleSheet("""
+        self.greeting.setStyleSheet(f"""
             font-size: 24px;
             font-weight: bold;
-            color: #9FCFFF;
+            color: {theme.TEXT_SECONDARY};
             border: none;
         """)
         subtitle = QLabel("User: V. Aryan Kabir | System: Ready")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        subtitle.setStyleSheet("""
-            color: #74B8FF;
+        subtitle.setStyleSheet(f"""
+            color: {theme.TEXT_DIM};
             font-size: 12px;
             border: none;
         """)
@@ -57,16 +57,16 @@ class DashboardPage(QWidget):
 
         self.time_label = QLabel()
         self.time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.time_label.setStyleSheet("""
-            color: #1EA7FF;
+        self.time_label.setStyleSheet(f"""
+            color: {theme.PRIMARY};
             font-size: 16px;
             font-weight: bold;
             border: none;
         """)
         self.date_label = QLabel()
         self.date_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.date_label.setStyleSheet("""
-            color: #74B8FF;
+        self.date_label.setStyleSheet(f"""
+            color: {theme.TEXT_DIM};
             font-size: 12px;
             border: none;
         """)
@@ -112,8 +112,8 @@ class DashboardPage(QWidget):
 
         self.core_caption = QLabel("● ONLINE")
         self.core_caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.core_caption.setStyleSheet("""
-            color: #1EA7FF;
+        self.core_caption.setStyleSheet(f"""
+            color: {theme.PRIMARY};
             font-size: 13px;
             letter-spacing: 3px;
             font-weight: bold;

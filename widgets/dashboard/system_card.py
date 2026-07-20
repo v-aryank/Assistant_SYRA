@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QLabel,
 )
 from PyQt6.QtCore import Qt
+from utils import theme
 
 
 class SystemCard(QWidget):
@@ -24,8 +25,8 @@ class SystemCard(QWidget):
         self.layout.setContentsMargins(14, 12, 14, 12)
 
         self.title_label = QLabel(title.upper())
-        self.title_label.setStyleSheet("""
-            color: #74B8FF;
+        self.title_label.setStyleSheet(f"""
+            color: {theme.TEXT_DIM};
             font-size: 11px;
             font-weight: bold;
             letter-spacing: 2px;
@@ -36,20 +37,20 @@ class SystemCard(QWidget):
         self.layout.addWidget(self.title_label)
         self.setLayout(self.layout)
 
-        self.setStyleSheet("""
-            SystemCard {
-                background-color: #07131F;
-                border: 1px solid #008CFF;
+        self.setStyleSheet(f"""
+            SystemCard {{
+                background-color: {theme.CARD};
+                border: 1px solid  {theme.BORDER};
                 border-radius: 6px;
-            }
+            }}
         """)
 
     def add_row(self, label_text, value_text=""):
         row = QHBoxLayout()
 
         label = QLabel(label_text)
-        label.setStyleSheet("""
-            color: #9FCFFF;
+        label.setStyleSheet(f"""
+            color: {theme.TEXT_SECONDARY};
             font-size: 13px;
             border: none;
             background: transparent;
@@ -58,8 +59,8 @@ class SystemCard(QWidget):
         value = QLabel(value_text)
         value.setObjectName(f"val_{label_text.replace(' ', '_')}")
         value.setAlignment(Qt.AlignmentFlag.AlignRight)
-        value.setStyleSheet("""
-            color: #1EA7FF;
+        value.setStyleSheet(f"""
+            color: {theme.PRIMARY};
             font-size: 14px;
             font-weight: bold;
             border: none;

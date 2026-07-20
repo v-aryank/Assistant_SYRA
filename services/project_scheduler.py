@@ -253,6 +253,54 @@ def choose_best_slot(free_slots, required_minutes):
 
     return best_slot
 
+def get_possible_slots(free_slots, required_minutes):
+
+    possible = []
+
+    for start, end in free_slots:
+
+        start_time = datetime.strptime(start, "%H:%M")
+        end_time = datetime.strptime(end, "%H:%M")
+
+        available = int(
+            (end_time - start_time).total_seconds() / 60
+        )
+
+        if available <= 0:
+            continue
+
+        if available >= required_minutes:
+
+            finish = start_time + timedelta(
+                minutes=required_minutes
+            )
+
+            possible.append({
+
+                "scheduled_start": start,
+
+                "scheduled_end": finish.strftime("%H:%M"),
+
+                "scheduled_minutes": required_minutes,
+
+                "completed": True
+            })
+
+        else:
+
+            possible.append({
+
+                "scheduled_start": start,
+
+                "scheduled_end": end,
+
+                "scheduled_minutes": available,
+
+                "completed": False
+            })
+
+    return possible
+
 
 
 def generate_daily_schedule():
@@ -277,15 +325,21 @@ def generate_daily_schedule():
 
     for project in recommendations:
 
-        slot = choose_best_slot(
+        possible_slots = get_possible_slots(
             free_slots,
             project["daily_minutes"]
         )
 
-        if slot is None:
+        if not possible_slots:
             continue
 
+        slot = possible_slots[0]
+
         scheduled = slot["scheduled_minutes"]
+
+        project["possible_slots"] = possible_slots
+
+        project["current_slot_index"] = 0
 
         project["recommended_slot"] = slot
 

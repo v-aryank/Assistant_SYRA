@@ -22,6 +22,7 @@ from PyQt6.QtCore import (
     QSize,
 )
 from PyQt6.QtGui import QMovie
+from utils import theme
 from config.version import SYRA_VERSION
 from dialogs.add_task_dialog import AddTaskDialog
 from dialogs.add_project_dialog import AddProjectDialog
@@ -161,7 +162,7 @@ class SYRASchedule(QMainWindow):
         bottom_layout = QHBoxLayout()
 
         widget_style = """
-        background-color: #07131F;
+        background-color: #030812;
         border: 1px solid #008CFF;
         border-radius: 6px;
         padding: 15px;
@@ -255,51 +256,49 @@ class SYRASchedule(QMainWindow):
         )   
 
         # Global style
-        self.setStyleSheet("""
-        QMainWindow {
-            background-color: #05080F;
-        }
+        self.setStyleSheet(f"""
+        QMainWindow {{
+            background:{theme.BACKGROUND};
+        }}
 
-        QWidget {
-            background-color: #05080F;
-            color: #D6ECFF;
-            font-family: "Terminus (TTF)";
-        }
+        QWidget {{
+            background:{theme.BACKGROUND};
+            color:{theme.TEXT};
+            font-family:"{theme.FONT}";
+        }}
 
-        QPushButton {
-            background-color: #07131F;
-            border: 1px solid #008CFF;
-            border-radius: 6px;
-            padding: 12px;
-            color: #D6ECFF;
-            font-size: 14px;
-        }
+        QPushButton {{
+            background:{theme.CARD_LIGHT};
+            border:1px solid {theme.BORDER};
+            border-radius:6px;
+            padding:12px;
+            color:{theme.TEXT};
+            font-size:14px;
+        }}
 
-        QPushButton:hover {
-            background-color: #0B1E33;
-            border: 1px solid #1EA7FF;
-        }
+        QPushButton:hover {{
+            background:{theme.BUTTON_HOVER};
+        }}
 
-        QListWidget {
-            background-color: #07131F;
-            border: 1px solid #008CFF;
-            border-radius: 6px;
-            padding: 10px;
-            color: #D6ECFF;
-        }
-        QListWidget::item:selected {
-            background: rgba(0,140,255,25);
-            border: 1px solid #008CFF;
-            border-left: 4px solid #1EA7FF;
-        }
+        QListWidget {{
+            background:{theme.CARD};
+            border:1px solid {theme.BORDER};
+            border-radius:6px;
+            padding:10px;
+        }}
 
-        QListWidget::item:hover {
-            background: rgba(30,167,255,20);
-        }
-                           
-        QLabel {
-            color: #D6ECFF;
-        }
+        QListWidget::item:selected {{
+            background:{theme.LIST_SELECTED};
+            border-left:4px solid {theme.PRIMARY};
+        }}
+
+        QListWidget::item:hover {{
+            background:{theme.LIST_HOVER};
+        }}
+
+        QLabel {{
+            color:{theme.TEXT};
+        }}
         """)
 
     def open_add_project(self):
