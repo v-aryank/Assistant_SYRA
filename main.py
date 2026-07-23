@@ -78,7 +78,7 @@ class SYRASchedule(QMainWindow):
             color: #1EA7FF;
         """)
 
-        subtitle = QLabel("User: V. Aryan | System: Ready")
+        subtitle = QLabel("User: _______ | System: Ready")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setStyleSheet("""
             font-size: 11px;
@@ -151,7 +151,6 @@ class SYRASchedule(QMainWindow):
         self.pages.setCurrentWidget(
             self.dashboard_page
         )
-
                 
                 
 

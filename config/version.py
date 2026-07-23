@@ -1,1 +1,1 @@
-SYRA_VERSION = "v3.5"
+SYRA_VERSION = "v3.5.5"
