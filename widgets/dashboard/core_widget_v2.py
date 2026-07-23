@@ -20,13 +20,59 @@ def rotate_point(x, y, z, ax, ay, az):
 
 
 class SpherePoint:
-    __slots__ = ("x0", "y0", "z0", "size", "brightness")
 
-    def __init__(self, x0, y0, z0, size, brightness):
-        self.x0, self.y0, self.z0 = x0, y0, z0
-        self.size = size
-        self.brightness = brightness
+    __slots__ = (
+    "widget",
 
+    "theta",
+    "phi",
+    "radius",
+
+    "vx",
+    "vy",
+    "vz",
+
+    "size",
+    "brightness",
+
+    "age",
+    "life",
+    )
+
+    def __init__(self, widget):
+
+        self.widget = widget
+
+        self.theta = random.uniform(0, math.pi * 2)
+        self.phi = math.acos(random.uniform(-1, 1))
+
+        self.radius = random.uniform(0.02, 0.10)
+
+        x = math.sin(self.phi) * math.cos(self.theta)
+        y = math.sin(self.phi) * math.sin(self.theta)
+        z = math.cos(self.phi)
+
+        speed = random.uniform(
+            widget.emit_speed_min,
+            widget.emit_speed_max
+        )
+
+        self.vx = x * speed
+        self.vy = y * speed
+        self.vz = z * speed
+
+        self.size = random.uniform(
+            widget.particle_size_min,
+            widget.particle_size_max
+        )
+
+        self.brightness = random.uniform(
+            widget.brightness_min,
+            widget.brightness_max
+        )
+
+        self.life = random.randint(120, 220)
+        self.age = 0
 
 class OrbitRing:
     __slots__ = ("radius", "tilt_x", "tilt_y", "tilt_z", "spin_speed", "phase", "width", "color")
@@ -48,32 +94,59 @@ class CoreWidget(QWidget):
     spinning orbital rings — atom / arc-reactor style.
     """
 
-    def __init__(self, parent=None, point_count=750, ring_count=5):
+    def __init__(self, parent=None, point_count=3500, ring_count=5):
         super().__init__(parent)
         self.setMinimumSize(350, 350)
 
         self.global_angle = 0.0
+
+        # =====================
+        # CORE SETTINGS
+        # =====================
+
+        # Particle cloud size
+        self.cloud_radius = 1.0
+
+        # Number of particles
+        self.point_count = point_count
+
+        # Rotation speed
+        self.rotation_speed = 0.5
+
+        # Particle outward speed
+        self.emit_speed_min = 0.005
+        self.emit_speed_max = 0.01
+
+        # Particle size
+        self.particle_size_min = 1.2
+        self.particle_size_max = 2.6
+
+        # Brightness
+        self.brightness_min = 0.45
+        self.brightness_max = 1.0
+
         self.points = []
         self.rings = []
 
-        self._build_sphere(point_count)
+        self._build_particle_cloud(point_count)
         self._build_rings(ring_count)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._tick)
         self.timer.start(30)  # ~33fps
 
-    def _build_sphere(self, count):
+    def _build_particle_cloud(self, count):
+
+        self.points = []
+
         for _ in range(count):
-            theta = random.uniform(0, math.pi * 2)
-            phi = math.acos(random.uniform(-1, 1))
-            r = random.uniform(0.80, 1.0)  # mostly near the surface -> fuzzy shell, not solid ball
-            x = r * math.sin(phi) * math.cos(theta)
-            y = r * math.sin(phi) * math.sin(theta)
-            z = r * math.cos(phi)
-            size = random.uniform(1.0, 2.2)
-            brightness = random.uniform(0.3, 1.0)
-            self.points.append(SpherePoint(x, y, z, size, brightness))
+            p = SpherePoint(self)
+
+            # Randomize age so the cloud starts already "alive"
+            p.age = random.randint(0, p.life)
+
+            self.points.append(p)
+
 
     def _build_rings(self, count):
         colors = ["#1EA7FF", "#5FC7FF", "#7FD4FF", "#39B6FF"]
@@ -88,9 +161,37 @@ class CoreWidget(QWidget):
             self.rings.append(OrbitRing(radius, tilt_x, tilt_y, tilt_z, spin_speed, width, color))
 
     def _tick(self):
-        self.global_angle += 0.4
+
+        self.global_angle += self.rotation_speed
+
+        # Spawn new particles continuously
+        for _ in range(20):
+            self.points.append(SpherePoint(self))
+
+        alive = []
+
+        for p in self.points:
+
+            p.age += 1
+
+            p.radius += math.sqrt(
+                p.vx * p.vx +
+                p.vy * p.vy +
+                p.vz * p.vz
+            )
+
+            if p.age < p.life and p.radius < 1.2:
+                alive.append(p)
+
+        self.points = alive
+
+        # Prevent unlimited growth
+        if len(self.points) > 4500:
+            self.points = self.points[-4500:]
+
         for ring in self.rings:
             ring.phase += ring.spin_speed
+
         self.update()
 
     def paintEvent(self, event):
@@ -154,17 +255,54 @@ class CoreWidget(QWidget):
         # ---- sphere particles, depth-sorted back to front ----
         projected = []
         for p in self.points:
-            rx, ry, rz = rotate_point(p.x0, p.y0, p.z0, 0.15, ga, 0)
+            direction_x = math.sin(p.phi) * math.cos(p.theta)
+            direction_y = math.sin(p.phi) * math.sin(p.theta)
+            direction_z = math.cos(p.phi)
+
+            x = direction_x * p.radius * self.cloud_radius
+            y = direction_y * p.radius * self.cloud_radius
+            z = direction_z * p.radius * self.cloud_radius
+
+            rx, ry, rz = rotate_point(
+                x,
+                y,
+                z,
+                0.15,
+                ga,
+                0
+            )
             scale = focal / (focal + rz * R)
             sx = cx + rx * R * scale
             sy = cy + ry * R * scale
-            projected.append((rz, sx, sy, p.size, p.brightness, scale))
+            projected.append((rz, sx, sy, p.size, p.brightness, scale, p))
 
         projected.sort(key=lambda item: item[0])
 
-        for rz, sx, sy, size, brightness, scale in projected:
+        for rz, sx, sy, size, brightness, scale, p in projected:
+
             depth_factor = (rz + 1) / 2  # 0 = back, 1 = front
-            alpha = max(15, min(255, int(255 * brightness * (0.25 + 0.75 * depth_factor))))
+
+            life_progress = p.age / p.life
+
+            if life_progress < 0.2:
+                fade = life_progress / 0.2
+
+            elif life_progress > 0.8:
+                fade = (1 - life_progress) / 0.2
+
+            else:
+                fade = 1
+
+            alpha = int(
+                255 *
+                p.brightness *
+                fade *
+                (0.25 + depth_factor * 0.75)
+            )
+
+            alpha = max(10, min(alpha, 255))
+
+           
             color = QColor("#9FE0FF")
             color.setAlpha(alpha)
             painter.setBrush(QBrush(color))

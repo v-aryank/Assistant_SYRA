@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QDateTime, QTimer
 from utils import theme
 from widgets.dashboard.system_card import SystemCard
-from widgets.dashboard.core_widget import CoreWidget
+from widgets.dashboard.core_widget_v1 import CoreWidget
 from widgets.dashboard.activity_log import ActivityLog
 import database.project_db as project_db # adjust import path if this is database.project_db
 from widgets.dashboard.syra_terminal import SYRATerminal
@@ -110,7 +110,7 @@ class DashboardPage(QWidget):
         center_col = QVBoxLayout()
         center_col.setSpacing(10)
 
-        self.core_widget = CoreWidget()
+        self.core_widget_v1 = CoreWidget()
 
         self.core_caption = QLabel("● ONLINE")
         self.core_caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -121,7 +121,7 @@ class DashboardPage(QWidget):
             font-weight: bold;
             border: none;
         """)
-        center_col.addWidget(self.core_widget)
+        center_col.addWidget(self.core_widget_v1)
         center_col.addWidget(self.core_caption)
 
 
