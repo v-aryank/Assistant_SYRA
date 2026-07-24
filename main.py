@@ -1,3 +1,4 @@
+#main.py
 import sys
 from database.database import (
     create_tables,

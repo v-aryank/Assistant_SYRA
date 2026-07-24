@@ -28,9 +28,10 @@ class SpherePoint:
     "phi",
     "radius",
 
-    "vx",
-    "vy",
-    "vz",
+    "speed",
+    "dir_x",
+    "dir_y",
+    "dir_z",
 
     "size",
     "brightness",
@@ -48,18 +49,14 @@ class SpherePoint:
 
         self.radius = random.uniform(0.02, 0.10)
 
-        x = math.sin(self.phi) * math.cos(self.theta)
-        y = math.sin(self.phi) * math.sin(self.theta)
-        z = math.cos(self.phi)
+        self.dir_x = math.sin(self.phi) * math.cos(self.theta)
+        self.dir_y = math.sin(self.phi) * math.sin(self.theta)
+        self.dir_z = math.cos(self.phi)
 
-        speed = random.uniform(
+        self.speed = random.uniform(
             widget.emit_speed_min,
             widget.emit_speed_max
         )
-
-        self.vx = x * speed
-        self.vy = y * speed
-        self.vz = z * speed
 
         self.size = random.uniform(
             widget.particle_size_min,
@@ -75,7 +72,17 @@ class SpherePoint:
         self.age = 0
 
 class OrbitRing:
-    __slots__ = ("radius", "tilt_x", "tilt_y", "tilt_z", "spin_speed", "phase", "width", "color")
+    __slots__ = (
+        "radius", 
+        "tilt_x", 
+        "tilt_y", 
+        "tilt_z", 
+        "spin_speed", 
+        "phase", 
+        "width", 
+        "color",
+        "node_phase"
+        )
 
     def __init__(self, radius, tilt_x, tilt_y, tilt_z, spin_speed, width, color):
         self.radius = radius
@@ -86,6 +93,17 @@ class OrbitRing:
         self.phase = 0.0
         self.width = width
         self.color = color
+        self.node_phase = random.uniform(0, math.pi * 2)
+
+class EnergyPulse:
+
+    def __init__(self):
+
+        self.radius = 0.05
+
+        self.alpha = 180
+
+        self.speed = 0.018
 
 
 class CoreWidget(QWidget):
@@ -94,7 +112,7 @@ class CoreWidget(QWidget):
     spinning orbital rings — atom / arc-reactor style.
     """
 
-    def __init__(self, parent=None, point_count=3500, ring_count=5):
+    def __init__(self, parent=None, point_count=2500, ring_count=4):
         super().__init__(parent)
         self.setMinimumSize(350, 350)
 
@@ -105,7 +123,7 @@ class CoreWidget(QWidget):
         # =====================
 
         # Particle cloud size
-        self.cloud_radius = 1.0
+        self.cloud_radius = 0.65
 
         # Number of particles
         self.point_count = point_count
@@ -127,6 +145,7 @@ class CoreWidget(QWidget):
 
         self.points = []
         self.rings = []
+        self.energy_pulses = []
 
         self._build_particle_cloud(point_count)
         self._build_rings(ring_count)
@@ -134,6 +153,12 @@ class CoreWidget(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._tick)
         self.timer.start(30)  # ~33fps
+
+        self.spawn_rate = 20
+        self.max_particles = 4500
+        self.max_radius = 1.2
+        self.fade_in = 0.2
+        self.fade_out = 0.8
 
     def _build_particle_cloud(self, count):
 
@@ -149,23 +174,40 @@ class CoreWidget(QWidget):
 
 
     def _build_rings(self, count):
-        colors = ["#1EA7FF", "#5FC7FF", "#7FD4FF", "#39B6FF"]
-        for _ in range(count):
-            radius = random.uniform(0.78, 1.05)
-            tilt_x = random.uniform(0, math.pi)
-            tilt_y = random.uniform(0, math.pi)
-            tilt_z = random.uniform(0, math.pi)
-            spin_speed = random.uniform(0.03, 0.11) * random.choice([-1, 1])
-            width = random.uniform(1.2, 2.0)
-            color = random.choice(colors)
-            self.rings.append(OrbitRing(radius, tilt_x, tilt_y, tilt_z, spin_speed, width, color))
+        configs = [
+            (0.88, 25, 10, 0, 0.035),
+            (0.95, -30, 55, 0, -0.030),
+            (1.02, 70, -20, 0, 0.025),
+            (0.82, 0, 80, 0, -0.020),
+        ]
 
+        colors = [
+            "#1EA7FF",
+            "#5FC7FF",
+            "#1EA7FF",
+            "#5FC7FF",
+        ]
+
+        for i in range(len(configs)):
+            r, tx, ty, tz, speed = configs[i]
+
+            self.rings.append(
+                OrbitRing(
+                    r,
+                    math.radians(tx),
+                    math.radians(ty),
+                    math.radians(tz),
+                    speed,
+                    0.7,
+                    colors[i]
+                )
+            )
     def _tick(self):
 
         self.global_angle += self.rotation_speed
 
         # Spawn new particles continuously
-        for _ in range(20):
+        for _ in range(self.spawn_rate):
             self.points.append(SpherePoint(self))
 
         alive = []
@@ -174,23 +216,38 @@ class CoreWidget(QWidget):
 
             p.age += 1
 
-            p.radius += math.sqrt(
-                p.vx * p.vx +
-                p.vy * p.vy +
-                p.vz * p.vz
-            )
+            p.radius += p.speed
 
-            if p.age < p.life and p.radius < 1.2:
+            if p.age < p.life and p.radius < self.max_radius:
                 alive.append(p)
 
         self.points = alive
 
         # Prevent unlimited growth
-        if len(self.points) > 4500:
+        if len(self.points) > self.max_particles:
             self.points = self.points[-4500:]
 
         for ring in self.rings:
             ring.phase += ring.spin_speed
+            ring.node_phase += ring.spin_speed * 1.8
+
+        # Spawn pulse every ~1.5 sec
+
+        if random.randint(0, 45) == 0:
+            self.energy_pulses.append(EnergyPulse())
+
+        alive = []
+
+        for pulse in self.energy_pulses:
+
+            pulse.radius += pulse.speed
+
+            pulse.alpha -= 3
+
+            if pulse.alpha > 0:
+                alive.append(pulse)
+
+        self.energy_pulses = alive
 
         self.update()
 
@@ -242,8 +299,14 @@ class CoreWidget(QWidget):
                 path.lineTo(sx, sy)
 
             base_color = QColor(ring.color)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
             # layered glow: wide+faint underneath, narrow+bright on top
-            for width_mult, alpha in ((5.0, 25), (3.0, 45), (1.6, 90), (1.0, 200)):
+            for width_mult, alpha in (
+                (5.0, 25), 
+                (3.0, 45), 
+                (1.6, 90), 
+                (1.0, 200)
+                ):
                 c = QColor(base_color)
                 c.setAlpha(alpha)
                 pen = QPen(c)
@@ -252,16 +315,99 @@ class CoreWidget(QWidget):
                 painter.setPen(pen)
                 painter.drawPath(path)
 
+            # -----------------------------
+            # Orbit Energy Node
+            # -----------------------------
+
+            t = ring.node_phase
+
+            ux = ring.radius * math.cos(t)
+            uy = ring.radius * math.sin(t)
+            uz = 0
+
+            rx, ry, rz = rotate_point(
+                ux,
+                uy,
+                uz,
+                ring.tilt_x,
+                ring.tilt_y + ring.phase,
+                ring.tilt_z
+            )
+
+            rx, ry, rz = rotate_point(
+                rx,
+                ry,
+                rz,
+                0,
+                ga,
+                0
+            )
+
+            scale = focal / (focal + rz * R)
+
+            sx = cx + rx * R * scale
+            sy = cy + ry * R * scale
+
+            # glow
+
+            for radius, alpha in (
+                (12,20),
+                (8,40),
+                (5,90),
+            ):
+
+                c = QColor(40,180,255,alpha)
+
+                painter.setBrush(c)
+
+                painter.setPen(Qt.PenStyle.NoPen)
+
+                painter.drawEllipse(
+                    QPointF(sx,sy),
+                    radius * scale,
+                    radius * scale
+                )
+
+            # center
+
+            painter.setBrush(QColor("#FFFFFF"))
+
+            painter.drawEllipse(
+                QPointF(sx,sy),
+                2.5,
+                2.5
+            )
+
+
+        # ---------- ENERGY PULSES ----------
+
+        for pulse in self.energy_pulses:
+
+            radius = pulse.radius * R
+
+            color = QColor(40,180,255,pulse.alpha)
+
+            pen = QPen(color)
+
+            pen.setWidthF(2)
+
+            painter.setPen(pen)
+
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+
+            painter.drawEllipse(
+                QPointF(cx,cy),
+                radius,
+                radius
+            )
+                
+
         # ---- sphere particles, depth-sorted back to front ----
         projected = []
         for p in self.points:
-            direction_x = math.sin(p.phi) * math.cos(p.theta)
-            direction_y = math.sin(p.phi) * math.sin(p.theta)
-            direction_z = math.cos(p.phi)
-
-            x = direction_x * p.radius * self.cloud_radius
-            y = direction_y * p.radius * self.cloud_radius
-            z = direction_z * p.radius * self.cloud_radius
+            x = p.dir_x * p.radius * self.cloud_radius
+            y = p.dir_y * p.radius * self.cloud_radius
+            z = p.dir_z * p.radius * self.cloud_radius
 
             rx, ry, rz = rotate_point(
                 x,
@@ -284,11 +430,11 @@ class CoreWidget(QWidget):
 
             life_progress = p.age / p.life
 
-            if life_progress < 0.2:
-                fade = life_progress / 0.2
+            if life_progress < self.fade_in:
+                fade = life_progress / self.fade_in
 
-            elif life_progress > 0.8:
-                fade = (1 - life_progress) / 0.2
+            elif life_progress > self.fade_out:
+                fade = (1 - life_progress) / (1 - self.fade_out)
 
             else:
                 fade = 1

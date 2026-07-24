@@ -48,7 +48,7 @@ class CoreWidget(QWidget):
     spinning orbital rings — atom / arc-reactor style.
     """
 
-    def __init__(self, parent=None, point_count=3500, ring_count=5):
+    def __init__(self, parent=None, point_count=2500, ring_count=5):
         super().__init__(parent)
         self.setMinimumSize(350, 350)
 

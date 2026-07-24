@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QDateTime, QTimer
 from utils import theme
 from widgets.dashboard.system_card import SystemCard
-from widgets.dashboard.core_widget_v1 import CoreWidget
+from widgets.dashboard.core_widget_v2 import CoreWidget
 from widgets.dashboard.activity_log import ActivityLog
 import database.project_db as project_db # adjust import path if this is database.project_db
 from widgets.dashboard.syra_terminal import SYRATerminal
