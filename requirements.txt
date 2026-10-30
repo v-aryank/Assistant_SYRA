@@ -1,0 +1,12 @@
+APScheduler==3.11.3
+colorama==0.4.6
+greenlet==3.5.3
+numpy==2.5.0
+psutil==7.2.2
+PyQt6==6.11.0
+PyQt6-Qt6==6.11.1
+PyQt6_sip==13.11.1
+pyqtgraph==0.14.0
+SQLAlchemy==2.0.51
+typing_extensions==4.16.0
+tzlocal==5.4.4

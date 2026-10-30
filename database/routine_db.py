@@ -250,3 +250,44 @@ def get_hidden_routines_for_today():
     conn.close()
 
     return routines
+
+
+def skip_routine_for_today(routine_id):
+
+    today = date.today().strftime("%Y-%m-%d")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO skipped_routines(
+            routine_id,
+            skip_date
+        )
+        VALUES (?,?)
+    """,(routine_id,today))
+
+    conn.commit()
+    conn.close()
+
+
+def is_routine_skipped(routine_id):
+
+    today = date.today().strftime("%Y-%m-%d")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM skipped_routines
+        WHERE
+            routine_id=?
+            AND skip_date=?
+    """,(routine_id,today))
+
+    skipped = cursor.fetchone()[0]
+
+    conn.close()
+
+    return skipped > 0

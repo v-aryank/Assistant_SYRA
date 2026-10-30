@@ -25,7 +25,7 @@ class ActivityLog(QTextEdit):
             }}
         """)
         self.log("System integrity check complete")
-        self.log("SYRA CORE stable")
+        self.log("FRIDAY CORE stable")
 
     def log(self, message: str):
         ts = QDateTime.currentDateTime().toString("hh:mm:ss")

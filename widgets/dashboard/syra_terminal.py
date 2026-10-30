@@ -9,7 +9,7 @@ from PyQt6.QtCore import Qt
 from utils import theme
 
 
-class SYRATerminal(QWidget):
+class FRIDAYTerminal(QWidget):
 
     def __init__(self):
         super().__init__()
@@ -66,7 +66,7 @@ class SYRATerminal(QWidget):
     
     def show_boot(self):
 
-        self.print("> Booting SYRA Core...")
+        self.print("> Booting FRIDAY Core...")
         self.print("> Loading Modules...")
         self.print("> Voice Engine ........ OFFLINE")
         self.print("> Scheduler ........... READY")
@@ -91,7 +91,7 @@ class SYRATerminal(QWidget):
 
         <span style="color:{theme.TEXT_DIM};">V.Aryan</span>
         <span style="color:{theme.TEXT};">@</span>
-        <span style="color:{theme.PRIMARY};">SYRA</span>
+        <span style="color:{theme.PRIMARY};">FRIDAY</span>
         <span style="color:{theme.TEXT};">:~$ </span>
         """
         )
@@ -112,7 +112,7 @@ class SYRATerminal(QWidget):
             <br>
             <span style="color:{theme.TEXT_DIM};">V.Aryan</span>
             <span style="color:{theme.TEXT};">@</span>
-            <span style="color:{theme.PRIMARY};">SYRA</span>
+            <span style="color:{theme.PRIMARY};">FRIDAY</span>
             <span style="color:{theme.TEXT};">:~$ </span>
             <span style="color:#8FD3FF;">{cmd}</span>
             <br>
@@ -133,7 +133,7 @@ clear
 status
 projects
 tasks
-syrafetch
+FRIDAYfetch
 about
             """)
 
@@ -144,7 +144,7 @@ about
         elif cmd == "status":
 
             self.print("""
-SYRA STATUS
+FRIDAYAYAYAY STATUS
 
 AI : Idle
 Voice : Offline
@@ -154,7 +154,7 @@ Scheduler : Ready
         elif cmd == "about":
 
             self.print("""
-SYRA v3.5.5
+FRIDAY v3.5.5
 
 Smart
 Yielding
@@ -162,17 +162,17 @@ Responsive
 Assistant
             """)
 
-        elif cmd == "syrafetch":
+        elif cmd == "FRIDAYfetch":
 
-            self.syrafetch()
+            self.FRIDAYfetch()
 
         else:
 
             self.print("Unknown command.")
 
 
-#---------------------SYRAFETCH---------------------------
-    def syrafetch(self):
+#---------------------FRIDAYFETCH---------------------------
+    def FRIDAYfetch(self):
 
         self.output.insertHtml(f"""
         <pre style="
@@ -184,7 +184,7 @@ Assistant
         <span style="color:{theme.PRIMARY};">
         ███████╗██╗   ██╗██████╗  █████╗      </span><span style="color:{theme.TEXT_DIM};">User      :</span> <span style="color:{theme.TEXT};">_______</span>
         <span style="color:{theme.PRIMARY};">
-        ██╔════╝╚██╗ ██╔╝██╔══██╗██╔══██╗     </span><span style="color:{theme.TEXT_DIM};">Core      :</span> <span style="color:{theme.PRIMARY};">SYRA v3.5.5</span>
+        ██╔════╝╚██╗ ██╔╝██╔══██╗██╔══██╗     </span><span style="color:{theme.TEXT_DIM};">Core      :</span> <span style="color:{theme.PRIMARY};">FRIDAY v3.5.5</span>
         <span style="color:{theme.PRIMARY};">
         ███████╗ ╚████╔╝ ██████╔╝███████║     </span><span style="color:{theme.TEXT_DIM};">AI        :</span> <span style="color:#00FFAA;">Idle</span>
         <span style="color:{theme.PRIMARY};">

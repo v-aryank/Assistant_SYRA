@@ -1,1 +1,1 @@
-SYRA_VERSION = "v3.5.5"
+FRIDAY_VERSION = "v1.1.0"

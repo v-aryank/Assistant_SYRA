@@ -11,7 +11,7 @@ from widgets.dashboard.system_card import SystemCard
 from widgets.dashboard.core_widget_v2 import CoreWidget
 from widgets.dashboard.activity_log import ActivityLog
 import database.project_db as project_db # adjust import path if this is database.project_db
-from widgets.dashboard.syra_terminal import SYRATerminal
+from widgets.dashboard.syra_terminal import FRIDAYTerminal
 from widgets.dashboard.system_monitor import SystemMonitor
 
 
@@ -44,7 +44,7 @@ class DashboardPage(QWidget):
             color: {theme.TEXT_SECONDARY};
             border: none;
         """)
-        subtitle = QLabel("User: _______ | System: Ready")
+        subtitle = QLabel("User: V. Aryan | System: Ready")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setStyleSheet(f"""
             color: {theme.TEXT_DIM};
@@ -110,7 +110,7 @@ class DashboardPage(QWidget):
         center_col = QVBoxLayout()
         center_col.setSpacing(10)
 
-        self.core_widget_v1 = CoreWidget()
+        self.core_widget_v2 = CoreWidget()
 
         self.core_caption = QLabel("● ONLINE")
         self.core_caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -121,7 +121,7 @@ class DashboardPage(QWidget):
             font-weight: bold;
             border: none;
         """)
-        center_col.addWidget(self.core_widget_v1)
+        center_col.addWidget(self.core_widget_v2)
         center_col.addWidget(self.core_caption)
 
 
@@ -143,14 +143,14 @@ class DashboardPage(QWidget):
 
         # ---------- Terminal ----------
 
-        self.terminal = SYRATerminal()
+        self.terminal = FRIDAYTerminal()
 
         terminal_container = QWidget()
 
         terminal_layout = QVBoxLayout(terminal_container)
 
 
-        terminal_title = QLabel("SYRA TERMINAL")
+        terminal_title = QLabel("FRIDAY TERMINAL")
         terminal_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         terminal_title.setStyleSheet(f"""
         font-size:16px;

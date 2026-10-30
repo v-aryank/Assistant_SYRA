@@ -1,5 +1,13 @@
 #main.py
+import os
 import sys
+
+os.environ["QT_QPA_PLATFORMTHEME"] = "generic"
+
+# Use the offscreen platform when no GUI display is available so the app can still start.
+if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
 from database.database import (
     create_tables,
 )
@@ -24,7 +32,7 @@ from PyQt6.QtCore import (
 )
 from PyQt6.QtGui import QMovie
 from utils import theme
-from config.version import SYRA_VERSION
+from config.version import FRIDAY_VERSION
 from dialogs.add_task_dialog import AddTaskDialog
 from dialogs.add_project_dialog import AddProjectDialog
 import database.project_db as project_db
@@ -34,12 +42,12 @@ from pages.routines import RoutinePage
 from services.routine_scheduler import inject_today_routines
 
 
-# SYRA Schedule Main Window SEction
-class SYRASchedule(QMainWindow):
+# FRIDAY Schedule Main Window SEction
+class FRIDAYSchedule(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("SYRA - Assistant")
+        self.setWindowTitle("FRIDAY - Assistant")
         self.setGeometry(100, 100, 1400, 800)
 
         # Main widget
@@ -58,7 +66,8 @@ class SYRASchedule(QMainWindow):
         logo_label = QLabel()
         logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        movie = QMovie("assets/brain.gif")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        movie = QMovie(os.path.join(base_dir, "assets", "brain.gif"))
         movie.setScaledSize(QSize(140,80))
 
         logo_label.setMovie(movie)
@@ -70,8 +79,8 @@ class SYRASchedule(QMainWindow):
         """)
 
         title = QLabel(
-            f'<span style="font-size: 30px; color: #1EA7FF; font-weight: bold; letter-spacing: 3px;">SYRA</span> '
-            f'<span style="font-size: 10px; color: #74B8FF; letter-spacing: 1px;">{SYRA_VERSION}</span>'
+            f'<span style="font-size: 30px; color: #1EA7FF; font-weight: bold; letter-spacing: 3px;">FRIDAY</span> '
+            f'<span style="font-size: 10px; color: #74B8FF; letter-spacing: 1px;">{FRIDAY_VERSION}</span>'
         )
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setTextFormat(Qt.TextFormat.RichText)
@@ -79,7 +88,7 @@ class SYRASchedule(QMainWindow):
             color: #1EA7FF;
         """)
 
-        subtitle = QLabel("User: _______ | System: Ready")
+        subtitle = QLabel("User: V. Aryan | System: Ready")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setStyleSheet("""
             font-size: 11px;
@@ -252,7 +261,7 @@ class SYRASchedule(QMainWindow):
         # Bottom status bar
         status = self.statusBar()
         status.showMessage(
-        "SYRA CORE | Voice: Offline | AI: Idle | Schedule Engine: Ready"
+        "FRIDAY CORE | Voice: Offline | AI: Idle | Schedule Engine: Ready"
         )   
 
         # Global style
@@ -375,7 +384,7 @@ inject_today_routines()
 
 app = QApplication(sys.argv)
 
-window = SYRASchedule()
+window = FRIDAYSchedule()
 
 
 window.show()

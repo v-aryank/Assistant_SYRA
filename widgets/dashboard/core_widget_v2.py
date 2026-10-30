@@ -123,7 +123,7 @@ class CoreWidget(QWidget):
         # =====================
 
         # Particle cloud size
-        self.cloud_radius = 0.65
+        self.cloud_radius = 1.0
 
         # Number of particles
         self.point_count = point_count

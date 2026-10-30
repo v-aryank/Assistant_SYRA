@@ -1,6 +1,6 @@
 import sqlite3
 
-DB_NAME = "SYRA_schedule.db"
+DB_NAME = "FRIDAY_schedule.db"
 
 
 def get_connection():
@@ -79,6 +79,21 @@ def create_tables():
                    
     enabled INTEGER DEFAULT 1
     );
+    """)
+
+    # ================= Routine Skip =================
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS skipped_routines(
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        routine_id INTEGER NOT NULL,
+
+        skip_date TEXT NOT NULL,
+
+        UNIQUE(routine_id, skip_date)
+    )
     """)
 
     conn.commit()

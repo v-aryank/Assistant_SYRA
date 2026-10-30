@@ -1,3 +1,5 @@
+#schedule.py
+
 import database.task_db as task_db
 import database.project_db as project_db
 import database.routine_db as routine_db
@@ -21,8 +23,8 @@ from PyQt6.QtWidgets import (
 )
 
 from PyQt6.QtCore import (
-    Qt, 
-    QDate, 
+    Qt,
+    QDate,
     QTime
 )
 
@@ -43,8 +45,8 @@ class SchedulePage(QWidget):
 
         self.schedule_title = QLabel("Today's Schedule")
         self.schedule_title.setStyleSheet("font-size: 26px; font-weight: bold;")
-        
-        
+
+
         self.new_task_btn = QPushButton("+ New Task")
         self.view_selector = QComboBox()
         self.view_selector.addItems([
@@ -60,7 +62,7 @@ class SchedulePage(QWidget):
         toolbar.addWidget(self.view_selector)
 
         layout.addLayout(toolbar)
-        
+
 
         # ---------- Main Content ----------
 
@@ -86,7 +88,7 @@ class SchedulePage(QWidget):
             font-size: 20px;
             font-weight: bold;
             color: {theme.PRIMARY};
-            padding-bottom: 8px; 
+            padding-bottom: 8px;
              """)
         right_panel.addWidget(right_title)
         self.total_label = QLabel("Total Tasks : 0")
@@ -108,7 +110,7 @@ class SchedulePage(QWidget):
         self.ai_label = QLabel(
             ".✦ ݁˖ AI Insight\n\nSystem analysing..."
         )
-        
+
 
         for label in (
             self.total_label,
@@ -131,7 +133,7 @@ class SchedulePage(QWidget):
         right_panel.addWidget(self.completed_label)
         right_panel.addWidget(self.remaining_label)
         right_panel.addWidget(self.percent_label)
-            
+
         right_panel.addSpacing(15)
 
         right_panel.addWidget(self.next_task_label)
@@ -143,7 +145,7 @@ class SchedulePage(QWidget):
         right_panel.addStretch()
 
         content_layout.addLayout(
- 
+
            left_panel,
             7
         )
@@ -155,14 +157,14 @@ class SchedulePage(QWidget):
         layout.addLayout(content_layout)
 
         # =====================================================
-        # SYRA Recommendation Panel
+        # FRIDAYAY Recommendation Panel
         # =====================================================
 
         self.recommend_box = QWidget()
 
         recommend_layout = QVBoxLayout()
 
-        title = QLabel(".✦ ݁ 🕮 SYRA Recommendation.✦ ݁ ݁")
+        title = QLabel(".✦ ݁ 🕮 FRIDAY Recommendation.✦ ݁ ݁")
 
         title.setStyleSheet(f"""
         font-size:20px;
@@ -229,7 +231,7 @@ class SchedulePage(QWidget):
         self.task_list.itemClicked.connect(
             self.toggle_task_completed
         )
-        
+
         self.task_list.setContextMenuPolicy(
             Qt.ContextMenuPolicy.CustomContextMenu
         )
@@ -310,7 +312,7 @@ class SchedulePage(QWidget):
 
             self.task_list.addItem(item)
         self.refresh_statistics()
-    
+
     def refresh_statistics(self):
 
         total = self.task_list.count()
@@ -346,7 +348,7 @@ class SchedulePage(QWidget):
         self.percent_label.setText(
             f"Completion : {percent}%"
         )
-        
+
         # ----------- Next Task ----------
         today = QDate.currentDate().toString("yyyy-MM-dd")
 
@@ -377,7 +379,7 @@ class SchedulePage(QWidget):
         No upcoming task
         """
             )
-        
+
         # ----------- Upcoming Deadline ----------
         project = project_db.get_next_deadline()
 
@@ -422,7 +424,7 @@ class SchedulePage(QWidget):
         No active project
         """
             )
-        
+
         # ---------- AI Insight ----------
         self.update_ai_insight(
             total,
@@ -497,7 +499,7 @@ class SchedulePage(QWidget):
         {text}
         """
             )
-    
+
     def format_duration(self, hours):
 
         total_minutes = round(hours * 60)
@@ -513,7 +515,7 @@ class SchedulePage(QWidget):
 
         else:
             return f"{m} min"
-        
+
     def update_recommendation(self, recommendation):
 
         self.accept_btn.setEnabled(True)
@@ -635,10 +637,10 @@ class SchedulePage(QWidget):
 
         )
 
-        
+
 
         self.main_window.refresh_all()
-        
+
     def reject_recommendation(self):
 
         if not self.current_recommendation:
@@ -693,7 +695,7 @@ class SchedulePage(QWidget):
                     self.current_project_index
                 ]
             )
-            
+
             self.current_recommendation["current_slot_index"] = 0
 
             self.update_recommendation(
@@ -748,12 +750,12 @@ class SchedulePage(QWidget):
                         project_id,
                         minutes
                     )
-        
+
         self.main_window.refresh_all()
 
-        
 
-    
+
+
     def task_context_menu(self, position):
 
         item = self.task_list.itemAt(position)
@@ -763,9 +765,26 @@ class SchedulePage(QWidget):
 
         menu = QMenu()
 
-        delete_action = menu.addAction(
-            "Delete Task"
-        )
+        task_id = item.data(Qt.ItemDataRole.UserRole)
+
+        project = task_db.get_project_task(task_id)
+
+        if project:
+
+            project_id, minutes, system = project
+
+            if system and project_id is not None and project_id < 0:
+
+                delete_action = menu.addAction("Skip Routine Today")
+
+            else:
+
+                delete_action = menu.addAction("Delete Task")
+
+        else:
+
+            delete_action = menu.addAction("Delete Task")
+
         edit_action = menu.addAction(
             "Edit Task"
         )
@@ -780,10 +799,16 @@ class SchedulePage(QWidget):
                 Qt.ItemDataRole.UserRole
             )
 
+            project_id, minutes, system = task_db.get_project_task(task_id)
+
+            if system and project_id is not None and project_id < 0:
+
+                routine_db.skip_routine_for_today(-project_id)
+
             task_db.delete_task(task_id)
 
             self.main_window.refresh_all()
-        
+
         elif action == edit_action:
             self.edit_task(item)
 
@@ -821,5 +846,5 @@ class SchedulePage(QWidget):
                 )
 
                 self.main_window.refresh_all()
- 
+
 

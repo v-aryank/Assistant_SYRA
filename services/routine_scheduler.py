@@ -12,7 +12,7 @@ def inject_today_routines():
 
     task_db.delete_today_routines(today)
 
-    
+
 
     for routine in routines:
 
@@ -24,6 +24,9 @@ def inject_today_routines():
             start,
             end
         ) = routine
+
+        if routine_db.is_routine_skipped(routine_id):
+            continue
 
         if not visible_in_schedule:
             continue
@@ -43,7 +46,7 @@ def inject_today_routines():
             date=today,
             start_time=start,
             end_time=end,
-            project_id=None,
+            project_id=-routine_id,
             system_generated=1,
             planned_minutes=0
         )
