@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QTextEdit
 from PyQt6.QtCore import QDateTime
+from utils import theme
 
 
 class ActivityLog(QTextEdit):
@@ -12,19 +13,19 @@ class ActivityLog(QTextEdit):
         super().__init__(parent)
         self.max_lines = max_lines
         self.setReadOnly(True)
-        self.setStyleSheet("""
-            QTextEdit {
-                background-color: #07131F;
-                border: 1px solid #008CFF;
+        self.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {theme.CARD};
+                border: 1px solid {theme.BORDER};
                 border-radius: 6px;
                 padding: 10px;
-                color: #74B8FF;
+                color: {theme.TEXT_DIM};
                 font-family: "Terminus (TTF)";
                 font-size: 12px;
-            }
+            }}
         """)
         self.log("System integrity check complete")
-        self.log("SYRA CORE stable")
+        self.log("FRIDAY CORE stable")
 
     def log(self, message: str):
         ts = QDateTime.currentDateTime().toString("hh:mm:ss")

@@ -139,12 +139,12 @@ class EditTaskDialog(AddTaskDialog):
         )
 
 
-# SYRA Schedule Main Window SEction
-class SYRASchedule(QMainWindow):
+# FRIDAY Schedule Main Window SEction
+class FRIDAYSchedule(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("SYRA Schedule Assistant")
+        self.setWindowTitle("FRIDAY Schedule Assistant")
         self.setGeometry(100, 100, 1400, 800)
 
         # Main widget
@@ -174,7 +174,7 @@ class SYRASchedule(QMainWindow):
             color: #1EA7FF;
         """)
 
-        title = QLabel("SYRA")
+        title = QLabel("FRIDAY")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setStyleSheet("""
             font-size: 30px;
@@ -342,7 +342,7 @@ class SYRASchedule(QMainWindow):
         # Bottom status bar
         status = self.statusBar()
         status.showMessage(
-        "SYRA CORE | Voice: Offline | AI: Idle | Schedule Engine: Ready"
+        "FRIDAY CORE | Voice: Offline | AI: Idle | Schedule Engine: Ready"
         )   
 
         # Global style
@@ -414,7 +414,7 @@ class SYRASchedule(QMainWindow):
             "HH:mm"
         )
 
-        conn = sqlite3.connect("SYRA_schedule.db")
+        conn = sqlite3.connect("FRIDAY_schedule.db")
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -438,7 +438,7 @@ class SYRASchedule(QMainWindow):
 
         self.task_list.clear()
 
-        conn = sqlite3.connect("SYRA_schedule.db")
+        conn = sqlite3.connect("FRIDAY_schedule.db")
         cursor = conn.cursor()
 
         today = QDate.currentDate().toString(
@@ -487,7 +487,7 @@ class SYRASchedule(QMainWindow):
         )
 
         conn = sqlite3.connect(
-            "SYRA_schedule.db"
+            "FRIDAYAY_schedule.db"
         )
 
         cursor = conn.cursor()
@@ -523,7 +523,7 @@ class SYRASchedule(QMainWindow):
         )
 
         conn = sqlite3.connect(
-            "SYRA_schedule.db"
+            "FRIDAY_schedule.db"
         )
 
         cursor = conn.cursor()
@@ -554,7 +554,7 @@ class SYRASchedule(QMainWindow):
                 new_end_time = dialog.end_input.time().toString("HH:mm")
 
                 conn = sqlite3.connect(
-                    "SYRA_schedule.db"
+                    "FRIDAY_schedule.db"
                 )
                 cursor = conn.cursor()
 
@@ -602,7 +602,7 @@ class SYRASchedule(QMainWindow):
             )
 
             conn = sqlite3.connect(
-                "SYRA_schedule.db"
+                "FRIDAY_schedule.db"
             )
 
             cursor = conn.cursor()
@@ -628,7 +628,7 @@ class SYRASchedule(QMainWindow):
 
 app = QApplication(sys.argv)
 
-window = SYRASchedule()
+window = FRIDAYSchedule()
 window.show()
 
 sys.exit(app.exec())
@@ -641,7 +641,7 @@ db.py[
 
     import sqlite3
 
-conn = sqlite3.connect("SYRA_schedule.db")
+conn = sqlite3.connect("FRIDAY_schedule.db")
 cursor = conn.cursor()
 
 # Projects table

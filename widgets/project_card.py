@@ -11,7 +11,7 @@ from PyQt6.QtCore import (
     Qt,
     pyqtSignal,
 )
-
+from utils import theme
 
 class ProjectCard(QFrame):
      
@@ -34,17 +34,17 @@ class ProjectCard(QFrame):
 
         self.setObjectName("ProjectCard")
 
-        self.setStyleSheet("""
-            QFrame#ProjectCard{
-                border:1px solid #008CFF;
+        self.setStyleSheet(f"""
+            QFrame#ProjectCard{{
+                border:1px solid {theme.BORDER};
                 border-radius:8px;
-                background:#07131F;
+                background:{theme.CARD};
                 padding:12px;
-            }
-            QFrame#ProjectCard:hover{
-                background:#0A1B2D;
+            }}
+            QFrame#ProjectCard:hover{{
+                background:{theme.CARD_HOVER};
                 border:2px solid #23A6FF;
-            }
+            }}
         """)
 
         layout = QVBoxLayout()
@@ -69,10 +69,10 @@ class ProjectCard(QFrame):
 
 
         title = QLabel(f"🗁 {name}")
-        title.setStyleSheet("""
+        title.setStyleSheet(f"""
             font-size:17px;
             font-weight:bold;
-            color:white;
+            color:{theme.TEXT};
             border:none;
         """)
 
@@ -82,30 +82,30 @@ class ProjectCard(QFrame):
 
         if status == "Completed":
 
-            status_badge.setStyleSheet("""
-            QLabel{
+            status_badge.setStyleSheet(f"""
+            QLabel{{
                 background:#1A321E;
-                color:#6CFF9E;
+                color:{theme.SUCCESS};
                 border:1px solid #42FF90;
                 border-radius:5px;
                 padding:0px;
                 font-size:11px;
                 font-weight:bold;
-            }
+            }}
             """)
 
         else:
 
-            status_badge.setStyleSheet("""
-            QLabel{
+            status_badge.setStyleSheet(f"""
+            QLabel{{
                 background:#0B1E33;
                 color:#49C8FF;
-                border:1px solid #008CFF;
+                border:1px solid {theme.BORDER};
                 border-radius:5px;
                 padding:0px;
                 font-size:11px;
                 font-weight:bold;
-            }
+            }}
             """)
 
         status_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -147,18 +147,18 @@ class ProjectCard(QFrame):
 
         progress_bar.setTextVisible(True)
 
-        progress_bar.setStyleSheet("""
-        QProgressBar{
-            border:1px solid #008CFF;
+        progress_bar.setStyleSheet(f"""
+        QProgressBar{{
+            border:1px solid {theme.PRIMARY_DARK};
             border-radius:5px;
             background:#06111C;
             height:14px;
-        }
+        }}
 
-        QProgressBar::chunk{
-            background:#1EA7FF;
+        QProgressBar::chunk{{
+            background:{theme.PRIMARY};
             border-radius:4px;
-        }
+        }}
         """)
 
         layout.addWidget(progress_bar)

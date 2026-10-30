@@ -48,7 +48,7 @@ class CoreWidget(QWidget):
     spinning orbital rings — atom / arc-reactor style.
     """
 
-    def __init__(self, parent=None, point_count=750, ring_count=5):
+    def __init__(self, parent=None, point_count=2500, ring_count=5):
         super().__init__(parent)
         self.setMinimumSize(350, 350)
 
@@ -56,24 +56,43 @@ class CoreWidget(QWidget):
         self.points = []
         self.rings = []
 
-        self._build_sphere(point_count)
+        self._build_particle_cloud(point_count)
         self._build_rings(ring_count)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._tick)
         self.timer.start(30)  # ~33fps
 
-    def _build_sphere(self, count):
+    def _build_particle_cloud(self, count):
+
+        self.points = []
+
         for _ in range(count):
+
             theta = random.uniform(0, math.pi * 2)
+
             phi = math.acos(random.uniform(-1, 1))
-            r = random.uniform(0.80, 1.0)  # mostly near the surface -> fuzzy shell, not solid ball
+
+            # Much denser near outer shell
+            r = random.uniform(0.72, 1.0)
+
             x = r * math.sin(phi) * math.cos(theta)
             y = r * math.sin(phi) * math.sin(theta)
             z = r * math.cos(phi)
-            size = random.uniform(1.0, 2.2)
-            brightness = random.uniform(0.3, 1.0)
-            self.points.append(SpherePoint(x, y, z, size, brightness))
+
+            size = random.uniform(0.8, 2.0)
+
+            brightness = random.uniform(0.35, 1.0)
+
+            self.points.append(
+                SpherePoint(
+                    x,
+                    y,
+                    z,
+                    size,
+                    brightness
+                )
+            )
 
     def _build_rings(self, count):
         colors = ["#1EA7FF", "#5FC7FF", "#7FD4FF", "#39B6FF"]

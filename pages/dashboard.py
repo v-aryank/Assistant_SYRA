@@ -6,11 +6,13 @@ from PyQt6.QtWidgets import (
     QLabel,
 )
 from PyQt6.QtCore import Qt, QDateTime, QTimer
-
+from utils import theme
 from widgets.dashboard.system_card import SystemCard
-from widgets.dashboard.core_widget import CoreWidget
+from widgets.dashboard.core_widget_v2 import CoreWidget
 from widgets.dashboard.activity_log import ActivityLog
 import database.project_db as project_db # adjust import path if this is database.project_db
+from widgets.dashboard.syra_terminal import FRIDAYTerminal
+from widgets.dashboard.system_monitor import SystemMonitor
 
 
 class DashboardPage(QWidget):
@@ -27,25 +29,25 @@ class DashboardPage(QWidget):
         # ================= Header =================
 
         title = QLabel("DASHBOARD")
-        title.setStyleSheet("""
+        title.setStyleSheet(f"""
             font-size: 13px;
             font-weight: bold;
             letter-spacing: 3px;
-            color: #1EA7FF;
+            color: {theme.PRIMARY};
             border: none;
         """)
 
         self.greeting = QLabel("Hello, Boss..")
-        self.greeting.setStyleSheet("""
+        self.greeting.setStyleSheet(f"""
             font-size: 24px;
             font-weight: bold;
-            color: #9FCFFF;
+            color: {theme.TEXT_SECONDARY};
             border: none;
         """)
-        subtitle = QLabel("User: V. Aryan Kabir | System: Ready")
+        subtitle = QLabel("User: V. Aryan | System: Ready")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        subtitle.setStyleSheet("""
-            color: #74B8FF;
+        subtitle.setStyleSheet(f"""
+            color: {theme.TEXT_DIM};
             font-size: 12px;
             border: none;
         """)
@@ -57,16 +59,16 @@ class DashboardPage(QWidget):
 
         self.time_label = QLabel()
         self.time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.time_label.setStyleSheet("""
-            color: #1EA7FF;
+        self.time_label.setStyleSheet(f"""
+            color: {theme.PRIMARY};
             font-size: 16px;
             font-weight: bold;
             border: none;
         """)
         self.date_label = QLabel()
         self.date_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.date_label.setStyleSheet("""
-            color: #74B8FF;
+        self.date_label.setStyleSheet(f"""
+            color: {theme.TEXT_DIM};
             font-size: 12px;
             border: none;
         """)
@@ -108,21 +110,20 @@ class DashboardPage(QWidget):
         center_col = QVBoxLayout()
         center_col.setSpacing(10)
 
-        self.core_widget = CoreWidget()
+        self.core_widget_v2 = CoreWidget()
 
         self.core_caption = QLabel("● ONLINE")
         self.core_caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.core_caption.setStyleSheet("""
-            color: #1EA7FF;
+        self.core_caption.setStyleSheet(f"""
+            color: {theme.PRIMARY};
             font-size: 13px;
             letter-spacing: 3px;
             font-weight: bold;
             border: none;
         """)
-
-
-        center_col.addWidget(self.core_widget)
+        center_col.addWidget(self.core_widget_v2)
         center_col.addWidget(self.core_caption)
+
 
         center_widget = QWidget()
         center_widget.setLayout(center_col)
@@ -131,29 +132,58 @@ class DashboardPage(QWidget):
         right_col = QVBoxLayout()
         right_col.setSpacing(15)
 
-        self.projects_card = SystemCard("Projects")
-        self.projects_val_active = self.projects_card.add_row("Active", "0")
-        self.projects_val_deadline = self.projects_card.add_row("Next Deadline", "—")
+        
+        self.system_monitor = SystemMonitor()
 
-        self.activity_log = ActivityLog()
-
-        right_col.addWidget(self.projects_card)
-        right_col.addWidget(self.activity_log)
+        right_col.addWidget(self.system_monitor)
 
         right_widget = QWidget()
         right_widget.setLayout(right_col)
 
-        # ---- Assemble grid: left | center | right ----
-        grid.addWidget(left_widget, 0, 0)
-        grid.addWidget(center_widget, 0, 1)
-        grid.addWidget(right_widget, 0, 2)
 
-        grid.setColumnStretch(0, 2)
-        grid.setColumnStretch(1, 3)
-        grid.setColumnStretch(2, 2)
+        # ---------- Terminal ----------
+
+        self.terminal = FRIDAYTerminal()
+
+        terminal_container = QWidget()
+
+        terminal_layout = QVBoxLayout(terminal_container)
+
+
+        terminal_title = QLabel("FRIDAY TERMINAL")
+        terminal_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        terminal_title.setStyleSheet(f"""
+        font-size:16px;
+        font-weight:bold;
+        color:{theme.TEXT_SECONDARY};
+        letter-spacing:2px;
+        border:1px solid{theme.BORDER};
+        """)
+
+        terminal_layout.addWidget(terminal_title)
+        terminal_layout.addWidget(self.terminal, 1)
+
+        # ---- Assemble grid: left | center | right ----
+        # Left
+        grid.addWidget(left_widget, 0, 0)
+
+        # Center
+        grid.addWidget(center_widget, 0, 1)
+
+        # Right (spans BOTH rows)
+        grid.addWidget(right_widget, 0, 2, 2, 1)
+
+        # Terminal (only under left+center)
+        grid.addWidget(terminal_container, 1, 0, 1, 2)
+
+        grid.setColumnStretch(0, 24)
+        grid.setColumnStretch(1, 34)
+        grid.setColumnStretch(2, 22)
+
+        grid.setRowStretch(0, 65)
+        grid.setRowStretch(1, 35)
 
         root.addLayout(grid)
-        root.addStretch()
 
         self.setLayout(root)
 
@@ -184,13 +214,4 @@ class DashboardPage(QWidget):
         self.time_label.setText(now.toString("hh:mm AP"))
 
     def refresh_data(self):
-        """Pull live counts from the DB into the cards."""
-        try:
-            count = project_db.get_active_project_count()
-            self.projects_val_active.setText(str(count))
-        except Exception as e:
-            self.activity_log.log(f"Failed to load project count: {e}")
-
-    def log_event(self, message):
-        """Expose a hook so main.py can push events into the terminal panel."""
-        self.activity_log.log(message)
+        pass

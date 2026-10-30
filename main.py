@@ -1,4 +1,13 @@
+#main.py
+import os
 import sys
+
+os.environ["QT_QPA_PLATFORMTHEME"] = "generic"
+
+# Use the offscreen platform when no GUI display is available so the app can still start.
+if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
 from database.database import (
     create_tables,
 )
@@ -22,21 +31,23 @@ from PyQt6.QtCore import (
     QSize,
 )
 from PyQt6.QtGui import QMovie
-from config.version import SYRA_VERSION
+from utils import theme
+from config.version import FRIDAY_VERSION
 from dialogs.add_task_dialog import AddTaskDialog
 from dialogs.add_project_dialog import AddProjectDialog
 import database.project_db as project_db
 from pages.projects import ProjectsPage
 from pages.dashboard import DashboardPage
-from services.project_scheduler import generate_project_recommendation
+from pages.routines import RoutinePage 
+from services.routine_scheduler import inject_today_routines
 
 
-# SYRA Schedule Main Window SEction
-class SYRASchedule(QMainWindow):
+# FRIDAY Schedule Main Window SEction
+class FRIDAYSchedule(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("SYRA - Assistant")
+        self.setWindowTitle("FRIDAY - Assistant")
         self.setGeometry(100, 100, 1400, 800)
 
         # Main widget
@@ -55,7 +66,8 @@ class SYRASchedule(QMainWindow):
         logo_label = QLabel()
         logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        movie = QMovie("assets/brain.gif")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        movie = QMovie(os.path.join(base_dir, "assets", "brain.gif"))
         movie.setScaledSize(QSize(140,80))
 
         logo_label.setMovie(movie)
@@ -67,8 +79,8 @@ class SYRASchedule(QMainWindow):
         """)
 
         title = QLabel(
-            f'<span style="font-size: 30px; color: #1EA7FF; font-weight: bold; letter-spacing: 3px;">SYRA</span> '
-            f'<span style="font-size: 10px; color: #74B8FF; letter-spacing: 1px;">{SYRA_VERSION}</span>'
+            f'<span style="font-size: 30px; color: #1EA7FF; font-weight: bold; letter-spacing: 3px;">FRIDAY</span> '
+            f'<span style="font-size: 10px; color: #74B8FF; letter-spacing: 1px;">{FRIDAY_VERSION}</span>'
         )
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setTextFormat(Qt.TextFormat.RichText)
@@ -115,6 +127,12 @@ class SYRASchedule(QMainWindow):
                 self.dashboard_page
             )
         )
+
+        btn_routine.clicked.connect(
+            lambda: self.pages.setCurrentWidget(
+                self.routine_page
+            )
+        )
         sidebar.addStretch()
         sidebar.addWidget(btn_settings)
 
@@ -133,15 +151,16 @@ class SYRASchedule(QMainWindow):
         self.schedule_page = SchedulePage(self)
         self.projects_page = ProjectsPage(self)
         self.dashboard_page = DashboardPage(self)
+        self.routine_page = RoutinePage(self)
         self.pages.addWidget(self.schedule_page)
         self.pages.addWidget(self.projects_page)
         self.pages.addWidget(self.dashboard_page)
+        self.pages.addWidget(self.routine_page)
 
         content.addWidget(self.pages)
         self.pages.setCurrentWidget(
             self.dashboard_page
         )
-
                 
                 
 
@@ -152,7 +171,7 @@ class SYRASchedule(QMainWindow):
         bottom_layout = QHBoxLayout()
 
         widget_style = """
-        background-color: #07131F;
+        background-color: #030812;
         border: 1px solid #008CFF;
         border-radius: 6px;
         padding: 15px;
@@ -237,60 +256,58 @@ class SYRASchedule(QMainWindow):
         main_layout.addWidget(content_widget)
 
         # Load bottom panel information
-        self.refresh_status_panels()
+        self.refresh_all()
 
         # Bottom status bar
         status = self.statusBar()
         status.showMessage(
-        "SYRA CORE | Voice: Offline | AI: Idle | Schedule Engine: Ready"
+        "FRIDAY CORE | Voice: Offline | AI: Idle | Schedule Engine: Ready"
         )   
 
         # Global style
-        self.setStyleSheet("""
-        QMainWindow {
-            background-color: #05080F;
-        }
+        self.setStyleSheet(f"""
+        QMainWindow {{
+            background:{theme.BACKGROUND};
+        }}
 
-        QWidget {
-            background-color: #05080F;
-            color: #D6ECFF;
-            font-family: "Terminus (TTF)";
-        }
+        QWidget {{
+            background:{theme.BACKGROUND};
+            color:{theme.TEXT};
+            font-family:"{theme.FONT}";
+        }}
 
-        QPushButton {
-            background-color: #07131F;
-            border: 1px solid #008CFF;
-            border-radius: 6px;
-            padding: 12px;
-            color: #D6ECFF;
-            font-size: 14px;
-        }
+        QPushButton {{
+            background:{theme.CARD_LIGHT};
+            border:1px solid {theme.BORDER};
+            border-radius:6px;
+            padding:12px;
+            color:{theme.TEXT};
+            font-size:14px;
+        }}
 
-        QPushButton:hover {
-            background-color: #0B1E33;
-            border: 1px solid #1EA7FF;
-        }
+        QPushButton:hover {{
+            background:{theme.BUTTON_HOVER};
+        }}
 
-        QListWidget {
-            background-color: #07131F;
-            border: 1px solid #008CFF;
-            border-radius: 6px;
-            padding: 10px;
-            color: #D6ECFF;
-        }
-        QListWidget::item:selected {
-            background: rgba(0,140,255,25);
-            border: 1px solid #008CFF;
-            border-left: 4px solid #1EA7FF;
-        }
+        QListWidget {{
+            background:{theme.CARD};
+            border:1px solid {theme.BORDER};
+            border-radius:6px;
+            padding:10px;
+        }}
 
-        QListWidget::item:hover {
-            background: rgba(30,167,255,20);
-        }
-                           
-        QLabel {
-            color: #D6ECFF;
-        }
+        QListWidget::item:selected {{
+            background:{theme.LIST_SELECTED};
+            border-left:4px solid {theme.PRIMARY};
+        }}
+
+        QListWidget::item:hover {{
+            background:{theme.LIST_HOVER};
+        }}
+
+        QLabel {{
+            color:{theme.TEXT};
+        }}
         """)
 
     def open_add_project(self):
@@ -308,8 +325,7 @@ class SYRASchedule(QMainWindow):
 
             print("Project saved successfully.")
 
-            self.refresh_status_panels()
-            self.projects_page.load_projects()
+            self.refresh_all()
 
     def refresh_status_panels(self):
 
@@ -349,15 +365,26 @@ class SYRASchedule(QMainWindow):
             )
 
             print("Task saved successfully.")
-            self.schedule_page.load_tasks()
-            self.refresh_status_panels()
+            self.refresh_all()
+
+    def refresh_all(self):
+
+        self.schedule_page.load_tasks()
+
+        self.projects_page.load_projects()
+
+        #self.dashboard_page.refresh_dashboard()
+
+        self.refresh_status_panels()
            
 
 create_tables()
 
+inject_today_routines()
+
 app = QApplication(sys.argv)
 
-window = SYRASchedule()
+window = FRIDAYSchedule()
 
 
 window.show()

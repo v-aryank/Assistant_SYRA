@@ -1,9 +1,14 @@
+#schedule.py
+
 import database.task_db as task_db
 import database.project_db as project_db
+import database.routine_db as routine_db
+
 from dialogs.edit_task_dialog import EditTaskDialog
 from services.project_scheduler import (
-    generate_project_recommendation
+    generate_daily_schedule
 )
+from utils import theme
 from PyQt6.QtWidgets import (
     QPushButton,
     QWidget,
@@ -18,8 +23,8 @@ from PyQt6.QtWidgets import (
 )
 
 from PyQt6.QtCore import (
-    Qt, 
-    QDate, 
+    Qt,
+    QDate,
     QTime
 )
 
@@ -28,6 +33,8 @@ class SchedulePage(QWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.main_window = parent
+        self.recommendations = []
+        self.current_project_index = 0
 
         layout = QVBoxLayout()
         content_layout = QVBoxLayout()
@@ -38,8 +45,8 @@ class SchedulePage(QWidget):
 
         self.schedule_title = QLabel("Today's Schedule")
         self.schedule_title.setStyleSheet("font-size: 26px; font-weight: bold;")
-        
-        
+
+
         self.new_task_btn = QPushButton("+ New Task")
         self.view_selector = QComboBox()
         self.view_selector.addItems([
@@ -55,7 +62,7 @@ class SchedulePage(QWidget):
         toolbar.addWidget(self.view_selector)
 
         layout.addLayout(toolbar)
-        
+
 
         # ---------- Main Content ----------
 
@@ -77,11 +84,11 @@ class SchedulePage(QWidget):
         right_panel = QVBoxLayout()
 
         right_title = QLabel("Statistics")
-        right_title.setStyleSheet("""
+        right_title.setStyleSheet(f"""
             font-size: 20px;
             font-weight: bold;
-            color: #1EA7FF;
-            padding-bottom: 8px; 
+            color: {theme.PRIMARY};
+            padding-bottom: 8px;
              """)
         right_panel.addWidget(right_title)
         self.total_label = QLabel("Total Tasks : 0")
@@ -103,7 +110,7 @@ class SchedulePage(QWidget):
         self.ai_label = QLabel(
             ".✦ ݁˖ AI Insight\n\nSystem analysing..."
         )
-        
+
 
         for label in (
             self.total_label,
@@ -118,7 +125,7 @@ class SchedulePage(QWidget):
                 border:1px solid #008CFF;
                 border-radius:8px;
                 padding:8px;
-                background:#07131F;
+                background: #030812;
                 font-size:15px;
             """)
 
@@ -126,7 +133,7 @@ class SchedulePage(QWidget):
         right_panel.addWidget(self.completed_label)
         right_panel.addWidget(self.remaining_label)
         right_panel.addWidget(self.percent_label)
-            
+
         right_panel.addSpacing(15)
 
         right_panel.addWidget(self.next_task_label)
@@ -138,7 +145,7 @@ class SchedulePage(QWidget):
         right_panel.addStretch()
 
         content_layout.addLayout(
- 
+
            left_panel,
             7
         )
@@ -150,19 +157,19 @@ class SchedulePage(QWidget):
         layout.addLayout(content_layout)
 
         # =====================================================
-        # SYRA Recommendation Panel
+        # FRIDAYAY Recommendation Panel
         # =====================================================
 
         self.recommend_box = QWidget()
 
         recommend_layout = QVBoxLayout()
 
-        title = QLabel(".✦ ݁˖🕮 SYRA Recommendation✦ ݁˖")
+        title = QLabel(".✦ ݁ 🕮 FRIDAY Recommendation.✦ ݁ ݁")
 
-        title.setStyleSheet("""
+        title.setStyleSheet(f"""
         font-size:20px;
         font-weight:bold;
-        color:#1EA7FF;
+        color:{theme.PRIMARY};
         """)
 
         self.recommend_text = QLabel(
@@ -175,7 +182,7 @@ class SchedulePage(QWidget):
         border:1px solid #008CFF;
         border-radius:8px;
         padding:8px;
-        background:#07131F;
+        background:#030812;
         font-size:14px;
         """)
 
@@ -224,7 +231,7 @@ class SchedulePage(QWidget):
         self.task_list.itemClicked.connect(
             self.toggle_task_completed
         )
-        
+
         self.task_list.setContextMenuPolicy(
             Qt.ContextMenuPolicy.CustomContextMenu
         )
@@ -268,6 +275,8 @@ class SchedulePage(QWidget):
             tomorrow,
             end_week
         )
+
+
         # ================= LOAD TASKS =================
 
         for task in tasks:
@@ -303,7 +312,7 @@ class SchedulePage(QWidget):
 
             self.task_list.addItem(item)
         self.refresh_statistics()
-    
+
     def refresh_statistics(self):
 
         total = self.task_list.count()
@@ -339,7 +348,7 @@ class SchedulePage(QWidget):
         self.percent_label.setText(
             f"Completion : {percent}%"
         )
-        
+
         # ----------- Next Task ----------
         today = QDate.currentDate().toString("yyyy-MM-dd")
 
@@ -370,7 +379,7 @@ class SchedulePage(QWidget):
         No upcoming task
         """
             )
-        
+
         # ----------- Upcoming Deadline ----------
         project = project_db.get_next_deadline()
 
@@ -415,7 +424,7 @@ class SchedulePage(QWidget):
         No active project
         """
             )
-        
+
         # ---------- AI Insight ----------
         self.update_ai_insight(
             total,
@@ -423,11 +432,23 @@ class SchedulePage(QWidget):
             remaining
         )
 
-        recommendation = generate_project_recommendation()
+        self.recommendations = generate_daily_schedule()
 
-        self.update_recommendation(
-            recommendation
-        )
+        self.current_project_index = 0
+
+        if self.recommendations:
+
+            self.current_recommendation = self.recommendations[0]
+
+            self.update_recommendation(
+                self.current_recommendation
+            )
+
+        else:
+
+            self.current_recommendation = None
+
+            self.update_recommendation(None)
 
     def update_ai_insight(
         self,
@@ -478,48 +499,119 @@ class SchedulePage(QWidget):
         {text}
         """
             )
-        
+
+    def format_duration(self, hours):
+
+        total_minutes = round(hours * 60)
+
+        h = total_minutes // 60
+        m = total_minutes % 60
+
+        if h > 0 and m > 0:
+            return f"{h} h {m} min"
+
+        elif h > 0:
+            return f"{h} h"
+
+        else:
+            return f"{m} min"
+
     def update_recommendation(self, recommendation):
-        
+
+        self.accept_btn.setEnabled(True)
+        self.reject_btn.setEnabled(True)
+
         self.current_recommendation = recommendation
+
         if recommendation is None:
 
             self.recommend_text.setText(
-                "No recommendation today."
+                "No recommendation available today."
             )
 
             return
 
-        slot = recommendation.get("recommended_slot")
+        slot = recommendation["recommended_slot"]
 
-        minutes = int(recommendation["daily_hours"] * 60)
+        project = recommendation["name"]
+
+        target = self.format_duration(
+            recommendation["target_minutes"] / 60
+        )
+
+        scheduled = self.format_duration(
+            recommendation["scheduled_minutes"] / 60
+        )
+
+        remaining = self.format_duration(
+            recommendation["remaining_minutes"] / 60
+        )
 
         if slot:
 
-            free_slot_start = slot[0]
-            free_slot_end = slot[1]
+            start = slot["scheduled_start"]
+            end = slot["scheduled_end"]
+
+
+            if slot["completed"]:
+
+                status = "Your full target can be completed today."
+
+            else:
+
+                status = (
+                    "Only part of today's target fits into your schedule."
+                )
+
 
             message = (
                 f"Sir, you have a free time slot between "
-                f"{free_slot_start} - {free_slot_end}.\n\n"
+                f"{start} - {end}.\n\n"
+
                 f"I recommend working on:\n"
-                f"Project: {recommendation['name']}\n"
-                f"Today's Goal: {minutes} min\n\n"
+
+                f"Project : {project}\n"
+                f"Today's Target : {target}\n"
+                f"Available Slot : {scheduled}\n"
+                f"Remaining Today : {remaining}\n\n"
+
+                f"{status}\n\n"
+
                 f"Should I schedule it?"
             )
 
         else:
 
             message = (
-                f"Sir, I recommend working on:\n\n"
-                f"Project: {recommendation['name']}\n"
-                f"Today's Goal: {minutes} min\n\n"
-                f"No suitable free time slot found."
+                f"Sir, today's most urgent project is:\n\n"
+
+                f"Project : {project}\n"
+                f"Today's Target : {target}\n\n"
+
+                f"I couldn't find any suitable free time slot today.\n"
+                f"You may need to reschedule some existing tasks."
             )
 
         self.recommend_text.setText(message)
 
     def accept_recommendation(self):
+
+        if self.current_recommendation is None:
+
+            self.recommend_text.setText(
+        """
+        Thank you, Sir.
+
+        I'll analyse everything again tomorrow.
+
+        Have a great day.
+        """
+            )
+
+            self.accept_btn.setEnabled(False)
+            self.reject_btn.setEnabled(False)
+
+            return
 
         if not self.current_recommendation:
             return
@@ -537,18 +629,99 @@ class SchedulePage(QWidget):
 
             QDate.currentDate().toString("yyyy-MM-dd"),
 
-            slot[0],
+            slot["scheduled_start"],
 
-            slot[1],
+            slot["scheduled_end"],
 
-            int(self.current_recommendation["daily_hours"] * 60)
+            slot["scheduled_minutes"]
 
         )
 
-        self.load_tasks()
+
+
+        self.main_window.refresh_all()
+
     def reject_recommendation(self):
 
-         self.recommend_box.hide()
+        if not self.current_recommendation:
+            return
+
+        slots = self.current_recommendation["possible_slots"]
+
+        next_slot = (
+            self.current_recommendation["current_slot_index"] + 1
+        )
+
+        # ---------------------------------------
+        # NEXT SLOT OF SAME PROJECT
+        # ---------------------------------------
+
+        if next_slot < len(slots):
+
+            self.current_recommendation["current_slot_index"] = next_slot
+
+            slot = slots[next_slot]
+
+            self.current_recommendation["recommended_slot"] = slot
+
+            self.current_recommendation["scheduled_minutes"] = (
+                slot["scheduled_minutes"]
+            )
+
+            self.current_recommendation["remaining_minutes"] = (
+
+                self.current_recommendation["target_minutes"]
+
+                - slot["scheduled_minutes"]
+
+            )
+
+            self.update_recommendation(
+                self.current_recommendation
+            )
+
+            return
+
+        # ---------------------------------------
+        # MOVE TO NEXT PROJECT
+        # ---------------------------------------
+
+        self.current_project_index += 1
+
+        if self.current_project_index < len(self.recommendations):
+
+            self.current_recommendation = (
+                self.recommendations[
+                    self.current_project_index
+                ]
+            )
+
+            self.current_recommendation["current_slot_index"] = 0
+
+            self.update_recommendation(
+                self.current_recommendation
+            )
+
+            return
+
+        # ---------------------------------------
+        # NOTHING LEFT TODAY
+        # ---------------------------------------
+
+        self.current_recommendation = None
+
+        self.recommend_text.setText(
+            """
+        Sir,
+
+        There are no more suitable free time slots today.
+
+        I will recommend these projects again tomorrow
+        based on your remaining workload.
+
+        """
+        )
+
 
 
     def toggle_task_completed(self, item):
@@ -562,7 +735,7 @@ class SchedulePage(QWidget):
 
             project_id, minutes, system = task
 
-            if system:
+            if system and project_id is not None:
 
                 if completed:
 
@@ -577,13 +750,12 @@ class SchedulePage(QWidget):
                         project_id,
                         minutes
                     )
-        
-        self.main_window.projects_page.load_projects()
 
-        self.main_window.refresh_status_panels()
-        self.load_tasks()
+        self.main_window.refresh_all()
 
-    
+
+
+
     def task_context_menu(self, position):
 
         item = self.task_list.itemAt(position)
@@ -593,9 +765,26 @@ class SchedulePage(QWidget):
 
         menu = QMenu()
 
-        delete_action = menu.addAction(
-            "Delete Task"
-        )
+        task_id = item.data(Qt.ItemDataRole.UserRole)
+
+        project = task_db.get_project_task(task_id)
+
+        if project:
+
+            project_id, minutes, system = project
+
+            if system and project_id is not None and project_id < 0:
+
+                delete_action = menu.addAction("Skip Routine Today")
+
+            else:
+
+                delete_action = menu.addAction("Delete Task")
+
+        else:
+
+            delete_action = menu.addAction("Delete Task")
+
         edit_action = menu.addAction(
             "Edit Task"
         )
@@ -610,10 +799,16 @@ class SchedulePage(QWidget):
                 Qt.ItemDataRole.UserRole
             )
 
+            project_id, minutes, system = task_db.get_project_task(task_id)
+
+            if system and project_id is not None and project_id < 0:
+
+                routine_db.skip_routine_for_today(-project_id)
+
             task_db.delete_task(task_id)
 
-            self.load_tasks()
-        
+            self.main_window.refresh_all()
+
         elif action == edit_action:
             self.edit_task(item)
 
@@ -650,6 +845,6 @@ class SchedulePage(QWidget):
                     new_end_time
                 )
 
-                self.load_tasks()
- 
+                self.main_window.refresh_all()
+
 

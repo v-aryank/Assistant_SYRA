@@ -1,6 +1,6 @@
 import sqlite3
 
-DB_NAME = "SYRA_schedule.db"
+DB_NAME = "FRIDAY_schedule.db"
 
 
 def get_connection():
@@ -46,9 +46,53 @@ def create_tables():
         start_time TEXT,
         end_time TEXT,
         completed INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'Pending',
         project_id INTEGER,
         system_generated INTEGER DEFAULT 0,
         planned_minutes INTEGER DEFAULT 0
+    )
+    """)
+
+    #================== Routines =====================
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS routines(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    title TEXT NOT NULL,
+                   
+    category TEXT DEFAULT 'General',
+                   
+    visible_in_schedule INTEGER DEFAULT 1,
+
+    start_time TEXT NOT NULL,
+
+    end_time TEXT NOT NULL,
+
+    sunday INTEGER DEFAULT 0,
+    monday INTEGER DEFAULT 0,
+    tuesday INTEGER DEFAULT 0,
+    wednesday INTEGER DEFAULT 0,
+    thursday INTEGER DEFAULT 0,
+    friday INTEGER DEFAULT 0,
+    saturday INTEGER DEFAULT 0,
+                   
+    enabled INTEGER DEFAULT 1
+    );
+    """)
+
+    # ================= Routine Skip =================
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS skipped_routines(
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        routine_id INTEGER NOT NULL,
+
+        skip_date TEXT NOT NULL,
+
+        UNIQUE(routine_id, skip_date)
     )
     """)
 

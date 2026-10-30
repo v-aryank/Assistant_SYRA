@@ -194,7 +194,9 @@ def toggle_task_completion(task_id):
     FROM tasks
     WHERE id=?
     """,(task_id,))
-    completed = cursor.fetchone()[0]
+    row = cursor.fetchone()
+
+    completed = row[0] if row else 0
 
     conn.close()
 
@@ -283,3 +285,120 @@ def has_project_session_today(project_id, today):
     conn.close()
 
     return count > 0
+
+def get_project_minutes_today(project_id, date):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COALESCE(SUM(planned_minutes), 0)
+        FROM tasks
+        WHERE
+            project_id = ?
+            AND date = ?
+            AND system_generated = 1
+    """, (
+        project_id,
+        date
+    ))
+
+    total = cursor.fetchone()[0]
+
+    conn.close()
+
+    return total
+
+def routine_exists_today(
+        title,
+        date,
+        start_time,
+        end_time
+    ):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM tasks
+        WHERE
+        title=?
+        AND date=?
+        AND start_time=?
+        AND end_time=?
+        AND system_generated=1
+    """, (
+        title,
+        date,
+        start_time,
+        end_time
+    ))
+
+    exists = cursor.fetchone()[0]
+
+    conn.close()
+
+    return exists > 0
+
+def delete_today_routines(today):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM tasks
+        WHERE
+            date=?
+            AND system_generated=1
+            AND project_id IS NULL
+    """, (today,))
+
+    conn.commit()
+    conn.close()
+
+def get_unfinished_ai_tasks():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            id,
+            title,
+            start_time,
+            end_time,
+            planned_minutes,
+            project_id
+        FROM tasks
+        WHERE
+            system_generated=1
+            AND completed=0
+    """)
+
+    tasks = cursor.fetchall()
+
+    conn.close()
+
+    return tasks
+
+def update_task_time(task_id, start_time, end_time):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE tasks
+        SET
+            start_time=?,
+            end_time=?,
+            status='Pending'
+        WHERE id=?
+    """, (
+        start_time,
+        end_time,
+        task_id
+    ))
+
+    conn.commit()
+    conn.close()
